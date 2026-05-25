@@ -23,6 +23,8 @@ add_executable(commander
     src/profiles.c
     src/ui.c
     src/icons.c
+    src/config_store.c
+    src/cdc_config.c
 )
 
 # USB HID only — no USB CDC stdio (serial debugging via UART0 on GP0/GP1)
@@ -37,9 +39,11 @@ target_link_libraries(commander
     pico_stdlib
     hardware_clocks
     hardware_dma
+    hardware_flash
     hardware_gpio
     hardware_pwm
     hardware_spi
+    hardware_watchdog
     tinyusb_device
     tinyusb_board
     pico_unique_id

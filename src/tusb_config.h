@@ -10,12 +10,15 @@
 // Full-speed device on USB port 0 (native RP2040 USB)
 #define CFG_TUSB_RHPORT0_MODE (OPT_MODE_DEVICE | OPT_MODE_FULL_SPEED)
 
-// Enable HID class only (no CDC, MSC, MIDI, etc.)
+// Composite HID + CDC device
 #define CFG_TUD_HID     1
-#define CFG_TUD_CDC     0
+#define CFG_TUD_CDC     1
 #define CFG_TUD_MSC     0
 #define CFG_TUD_MIDI    0
 #define CFG_TUD_VENDOR  0
+
+#define CFG_TUD_CDC_RX_BUFSIZE  256
+#define CFG_TUD_CDC_TX_BUFSIZE  512
 
 #define CFG_TUD_HID_EP_BUFSIZE  16
 

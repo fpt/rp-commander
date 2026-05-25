@@ -1,4 +1,4 @@
-# CLAUDE.md — ardu-commander (USB HID Commander)
+# CLAUDE.md — rp-commander (USB HID Commander)
 
 ## Quick commands
 
@@ -15,7 +15,7 @@ make icons          # convert resources/ → src/icons_data.h (pip3 install Pill
 
 | Component | Part | Interface |
 |-----------|------|-----------|
-| MCU | Waveshare RP2040-Zero | USB-C (native USB HID) |
+| MCU | Waveshare RP2040-Zero | USB-C (native USB HID + CDC) |
 | Display | ST7789 240×240 | SPI0 (GP2/3/4/5/6/7) |
 | ENC1 | EC11 rotary encoder | GPIO IRQ GP14/15 — **profile nav only** |
 | ENC2 | EC11 rotary encoder | GPIO IRQ GP28/29 — per-profile HID |
@@ -27,8 +27,8 @@ Only GP0–GP15 and GP26–GP29 are accessible. GP16 = onboard WS2812.
 
 | GPIO | Function |
 |------|----------|
-| GP0  | Optional PIO USB D− |
-| GP1  | Optional PIO USB D+ |
+| GP0  | UART0 TX (serial debug) |
+| GP1  | UART0 RX |
 | GP2  | LCD SCK (SPI0) |
 | GP3  | LCD MOSI (SPI0) |
 | GP4  | LCD RST |
@@ -53,18 +53,20 @@ Only GP0–GP15 and GP26–GP29 are accessible. GP16 = onboard WS2812.
 
 ```
 src/
-├── config.h          — pin assignments, timing constants
-├── main.c            — init + event loop
-├── lcd.h / lcd.c     — ST7789 SPI0 driver with DMA (240×240, 180° rotation)
-├── font.h / font.c   — 8×8 bitmap font (from rp-carsensor)
-├── encoder.h / .c    — quadrature encoder with GPIO IRQ
-├── buttons.h / .c    — 6-button debounced scanner
-├── usb_hid.h / .c    — TinyUSB keyboard + mouse report queue
-├── usb_descriptors.c — TinyUSB device/config/HID report descriptors
-├── tusb_config.h     — TinyUSB build config (CFG_TUD_HID=1 only)
-├── profiles.h / .c   — app + profile table with all HID mappings
-├── icons.h / icons.c — per-app icon draw functions (geometric, RGB565)
-└── ui.h / ui.c       — 3-row LCD layout renderer
+├── config.h           — pin assignments, timing constants
+├── main.c             — init + event loop
+├── lcd.h / lcd.c      — ST7789 SPI0 driver with DMA (240×240, 0° rotation)
+├── font.h / font.c    — 8×8 bitmap font; font_draw_char() for icon use
+├── encoder.h / .c     — quadrature encoder with GPIO IRQ
+├── buttons.h / .c     — 6-button debounced scanner
+├── usb_hid.h / .c     — TinyUSB keyboard + mouse report queue
+├── usb_descriptors.c  — TinyUSB device/config/HID+CDC descriptors (IAD)
+├── tusb_config.h      — TinyUSB build config (CFG_TUD_HID=1, CFG_TUD_CDC=1)
+├── profiles.h / .c    — app + profile table, JSON serialization/deserialization
+├── icons.h / icons.c  — per-app icon draw functions (geometric + optional blit)
+├── ui.h / ui.c        — 3-row LCD layout renderer, Claude mascot animation
+├── config_store.h / .c — flash R/W with CRC32 (last sector of 2 MB flash)
+└── cdc_config.h / .c  — CDC config protocol (HELLO/GET/SET/SAVE/RESET)
 ```
 
 ## UI layout (240×240)
@@ -74,8 +76,8 @@ y=  0 ┌───────────────────────�
       │  App strip: 5 icons × 48 px           │ h=48
 y= 48 ├────────────────────────────────────────┤
       │  Large icon │ App name                 │ h=80
-      │             │ Profile name (×2)        │
-      │             │ ● ○ ○  (dots per profile)│
+      │  (animated  │ Profile name (×2)        │
+      │   for Claude)│ ● ○ ○  (dots per profile)│
 y=128 ├──────────────────┬─────────────────────┤
       │ ← Profile →      │ ENC2: <label>       │ h=52
       │ X: <action>      │ Y: <action>         │
@@ -99,22 +101,51 @@ y=240 └──────┴──────┴─────┴───�
 Profile cycle order: Chrome/Browsing → Claude/Chat → Fusion/Sketch →
 Fusion/Modeling → KiCad/Schematics → KiCad/PCB → Krita/Painting → (wrap)
 
+LCD backlight turns off after 30 s of inactivity. Any input wakes it;
+the triggering input is discarded so no accidental action fires on wake.
+
 ## LCD notes
 
 - ST7789 240×240 on SPI0 at 40 MHz
-- `MADCTL = 0x00` (0° rotation — no flip)
-- Row address offset = 0 (for 180°: MADCTL=0xC0, ROW_OFFSET=80)
+- `MADCTL = 0x00` (0° rotation)
+- Row address offset = 0
 - RGB565 values in framebuffer are byte-swapped for DMA/SPI big-endian output:
   use `RGB565(r,g,b)` macro (applies `__builtin_bswap16`) or predefined `COL_xxx`
 - `lcd_flush_full()` uses DMA; `lcd_flush_region()` is blocking row-by-row SPI
 
-## USB HID
+## USB
 
-- TinyUSB device only (no CDC) — `pico_enable_stdio_usb = 0`
-- Serial debug via UART0 (GP0=TX, GP1=RX, 115200 baud)
+- Composite device: HID (keyboard + mouse) + CDC (config serial)
+- No mass storage, MIDI, or vendor interface
+- Serial debug via UART0 (GP0=TX, GP1=RX, 115200 baud) — not USB
 - HID report IDs: 1 = keyboard, 2 = mouse (with scroll wheel)
-- `usb_hid_task()` must be called every loop iteration
-- Key queue: press + auto-release after 30 ms; scroll queue: immediate
+- CDC interface string: "Commander CDC"; used by both the web configurator and Python CLI
+- `usb_hid_task()` and `cdc_config_task()` must both be called every loop iteration
+
+## CDC config protocol
+
+Line-based, UTF-8. Commands sent by host, responses from device.
+
+| Command | Response |
+|---------|----------|
+| `HELLO` | `rp-commander 1.0\nOK` |
+| `GET` | `<compact JSON>\nOK` |
+| `SET <len>\n<body>` | `OK` or `ERR …\nFAIL` |
+| `SAVE` | `OK` (writes current profiles to flash) |
+| `RESET` | `OK` then watchdog reboot |
+
+JSON schema: `{"v":1,"profiles":[{…}, …]}`
+
+Each profile object: `{"app":N,"name":"…","el":"…","ew":{action},"eccw":{action},"x":{action},…}`
+
+Action: `{"t":0}` (none) / `{"t":1,"m":N,"k":N,"l":"…"}` (key) / `{"t":2,"d":N,"l":"…"}` (scroll)
+
+## Flash config store
+
+- Location: last sector of flash (`PICO_FLASH_SIZE_BYTES - FLASH_SECTOR_SIZE`, i.e. offset 0x1FF000 on 2 MB)
+- Header: magic `0x52504346` ("RPCF") + CRC32 + length (12 bytes total)
+- Interrupts disabled during erase+program
+- Loaded at startup; if missing or corrupt, compiled-in defaults are used
 
 ## Build
 
@@ -122,6 +153,25 @@ Board: `pico` (generic RP2040). If the Pico SDK has `waveshare_rp2040_zero`,
 set `PICO_BOARD=waveshare_rp2040_zero` in CMakeLists.txt.
 
 Pico SDK path: `../pico-sdk` (relative to project root).
+
+GitHub Actions builds the UF2 on every push to `main` (see `.github/workflows/build.yml`).
+
+## Configuring profiles
+
+### Python CLI
+
+```bash
+pip install pyserial
+python3 tools/commander.py ports              # list candidate ports
+python3 tools/commander.py dump profiles.json # read from device
+python3 tools/commander.py load profiles.json # write + save to flash
+python3 tools/commander.py --port /dev/tty.usbmodemXXX dump
+```
+
+### Web configurator
+
+`docs/index.html` — deployed to GitHub Pages. Requires Chrome or Edge (WebSerial API).
+Enable Pages in repo Settings → Pages → source: `docs/` on `main`.
 
 ## Adding a profile
 
@@ -140,12 +190,13 @@ For Windows, change `_G` to `_C` (LEFTCTRL) in `profiles.c`.
 
 | File | Contents |
 |------|----------|
-| `docs/WIRING.md` | Physical wiring table (LCD, encoders, buttons, optional interfaces) |
+| `docs/WIRING.md` | Physical wiring table (LCD, encoders, buttons) |
+| `docs/index.html` | WebSerial profile configurator |
 
 ## Resources
 
 Source icon images live in `resources/`. They are not used directly by the firmware —
-they must be converted to 32×32 RGB565 C arrays and embedded in `src/icons.c`.
+they must be converted to 32×32 RGB565 C arrays and embedded in `src/icons_data.h`.
 
 | File | App |
 |------|-----|

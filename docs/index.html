@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RP Commander Config</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #1a1a1e;
+    --bg2: #25252b;
+    --bg3: #2e2e36;
+    --border: #3a3a44;
+    --accent: #5b8aff;
+    --accent2: #7c5cfc;
+    --text: #e0e0e8;
+    --text2: #888898;
+    --ok: #4caf80;
+    --err: #f06060;
+    --warn: #f0a040;
+    --font: 'Menlo', 'Consolas', 'Monaco', monospace;
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+  header {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  header h1 { font-size: 16px; font-weight: 600; letter-spacing: 0.04em; flex: 1; }
+  .notice {
+    background: #2a2820;
+    border: 1px solid #5a4a20;
+    color: var(--warn);
+    padding: 8px 14px;
+    margin: 12px 20px 0;
+    border-radius: 4px;
+    font-size: 12px;
+  }
+  #main { padding: 14px 20px; }
+  .controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+  button {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  button:hover { border-color: var(--accent); background: var(--bg2); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button.primary:hover { background: #4a79ee; }
+  button.success { background: var(--ok); border-color: var(--ok); color: #fff; }
+  #status-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--err); flex-shrink: 0;
+    transition: background 0.3s;
+  }
+  #status-dot.connected { background: var(--ok); }
+  #status-label { font-size: 12px; color: var(--text2); }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 2px; flex-wrap: wrap; margin-bottom: 12px; border-bottom: 1px solid var(--border); }
+  .tab {
+    padding: 6px 14px; cursor: pointer; border-radius: 4px 4px 0 0;
+    background: var(--bg2); border: 1px solid transparent;
+    border-bottom: none; font-size: 12px; color: var(--text2);
+    margin-bottom: -1px; transition: color 0.15s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { background: var(--bg3); border-color: var(--border); color: var(--accent); }
+
+  /* Profile editor */
+  .profile-editor { display: none; }
+  .profile-editor.active { display: block; }
+  .profile-meta { display: flex; gap: 12px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+  .field-group { display: flex; flex-direction: column; gap: 3px; }
+  .field-group label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; }
+  input[type=text], input[type=number], select {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 12px;
+    padding: 5px 8px;
+    border-radius: 3px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  input[type=text]:focus, input[type=number]:focus, select:focus { border-color: var(--accent); }
+  input[type=text].narrow { width: 110px; }
+  input[type=text].wider { width: 160px; }
+  input[type=number].tiny { width: 70px; }
+  select { padding-right: 4px; }
+
+  .actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 10px;
+  }
+  .action-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 10px 12px;
+  }
+  .action-card h3 { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+  .action-fields { display: flex; flex-direction: column; gap: 6px; }
+  .action-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .mod-checks { display: flex; gap: 8px; flex-wrap: wrap; }
+  .mod-check { display: flex; align-items: center; gap: 3px; font-size: 12px; cursor: pointer; }
+  .mod-check input { margin: 0; cursor: pointer; }
+
+  /* Log */
+  #log {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 10px;
+    height: 120px;
+    overflow-y: auto;
+    font-size: 11px;
+    color: var(--text2);
+    margin-top: 14px;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  .log-ok  { color: var(--ok); }
+  .log-err { color: var(--err); }
+  .log-tx  { color: var(--accent); }
+  .log-rx  { color: var(--text); }
+</style>
+</head>
+<body>
+<header>
+  <h1>RP Commander Config</h1>
+  <span id="status-dot"></span>
+  <span id="status-label">Disconnected</span>
+  <button id="btn-connect">Connect</button>
+</header>
+<div class="notice">
+  Requires Chrome or Edge with WebSerial enabled. Connect the device via USB.
+</div>
+<div id="main">
+  <div class="controls">
+    <button id="btn-load" disabled>Upload from Device</button>
+    <button id="btn-save" class="primary" disabled>Save Changes to Device</button>
+  </div>
+  <div id="tabs" class="tabs"></div>
+  <div id="editors"></div>
+  <div id="log"></div>
+</div>
+
+<script>
+// ── HID keycodes ──────────────────────────────────────────────────────────────
+const HID_KEYS = [
+  ['---',0],
+  ['A',4],['B',5],['C',6],['D',7],['E',8],['F',9],['G',10],['H',11],
+  ['I',12],['J',13],['K',14],['L',15],['M',16],['N',17],['O',18],['P',19],
+  ['Q',20],['R',21],['S',22],['T',23],['U',24],['V',25],['W',26],['X',27],
+  ['Y',28],['Z',29],
+  ['1',30],['2',31],['3',32],['4',33],['5',34],['6',35],['7',36],['8',37],['9',38],['0',39],
+  ['Enter',40],['Escape',41],['Backspace',42],['Tab',43],['Space',44],
+  ['Minus',45],['Equal',46],['[',47],[']',48],['\\',49],
+  [';',51],["'",52],['`',53],[',',54],['.',55],['/',56],
+  ['F1',58],['F2',59],['F3',60],['F4',61],['F5',62],['F6',63],
+  ['F7',64],['F8',65],['F9',66],['F10',67],['F11',68],['F12',69],
+  ['PrintScr',70],['ScrollLock',71],['Pause',72],['Insert',73],
+  ['Home',74],['PageUp',75],['Delete',76],['End',77],['PageDown',78],
+  ['ArrowRight',79],['ArrowLeft',80],['ArrowDown',81],['ArrowUp',82],
+];
+const MOD_CTRL  = 0x01;
+const MOD_SHIFT = 0x02;
+const MOD_ALT   = 0x04;
+const MOD_GUI   = 0x08;
+
+// ── JSON helpers ──────────────────────────────────────────────────────────────
+function actionToJson(a) {
+  if (a.t === 0) return {t:0};
+  if (a.t === 1) return {t:1, m:a.m, k:a.k, l:a.l};
+  return {t:2, d:a.d, l:a.l};
+}
+
+function buildJson(profiles) {
+  return JSON.stringify({v:1, profiles: profiles.map(p => ({
+    app: p.app,
+    name: p.name,
+    el: p.el,
+    ew: actionToJson(p.ew),
+    eccw: actionToJson(p.eccw),
+    x: actionToJson(p.x),
+    y: actionToJson(p.y),
+    a: actionToJson(p.a),
+    b: actionToJson(p.b),
+    c: actionToJson(p.c),
+    d: actionToJson(p.d),
+  }))});
+}
+
+function parseJson(str) {
+  const obj = JSON.parse(str);
+  if (obj.v !== 1 || !Array.isArray(obj.profiles)) throw new Error('bad format');
+  return obj.profiles.map(p => ({
+    app: p.app ?? 0,
+    name: p.name ?? '',
+    el: p.el ?? '',
+    ew:   parseAction(p.ew),
+    eccw: parseAction(p.eccw),
+    x: parseAction(p.x),
+    y: parseAction(p.y),
+    a: parseAction(p.a),
+    b: parseAction(p.b),
+    c: parseAction(p.c),
+    d: parseAction(p.d),
+  }));
+}
+
+function parseAction(a) {
+  if (!a || a.t === 0) return {t:0, m:0, k:0, d:0, l:'---'};
+  if (a.t === 1) return {t:1, m:a.m??0, k:a.k??0, d:0, l:a.l??''};
+  return {t:2, m:0, k:0, d:a.d??0, l:a.l??''};
+}
+
+// ── Serial ────────────────────────────────────────────────────────────────────
+let port = null;
+let reader = null;
+let writer = null;
+let lineBuffer = '';
+let lineResolvers = [];
+
+function log(msg, cls='') {
+  const el = document.getElementById('log');
+  const line = document.createElement('span');
+  if (cls) line.className = cls;
+  line.textContent = msg + '\n';
+  el.appendChild(line);
+  el.scrollTop = el.scrollHeight;
+}
+
+async function writeLine(s) {
+  log('> ' + s.replace(/\n/g,'↵'), 'log-tx');
+  const enc = new TextEncoder();
+  await writer.write(enc.encode(s));
+}
+
+async function readLine() {
+  return new Promise(resolve => lineResolvers.push(resolve));
+}
+
+async function readerLoop() {
+  const dec = new TextDecoder();
+  try {
+    while (true) {
+      const {value, done} = await reader.read();
+      if (done) break;
+      lineBuffer += dec.decode(value);
+      let nl;
+      while ((nl = lineBuffer.indexOf('\n')) !== -1) {
+        const line = lineBuffer.slice(0, nl);
+        lineBuffer = lineBuffer.slice(nl + 1);
+        log('< ' + line, 'log-rx');
+        if (lineResolvers.length > 0) lineResolvers.shift()(line);
+      }
+    }
+  } catch(e) { /* port closed */ }
+}
+
+async function sendCommand(cmd) {
+  await writeLine(cmd + '\n');
+}
+
+async function readUntilOk() {
+  const lines = [];
+  while (true) {
+    const l = await readLine();
+    if (l === 'OK') return {ok: true, lines};
+    if (l === 'FAIL') return {ok: false, lines};
+    lines.push(l);
+  }
+}
+
+// ── Connect ───────────────────────────────────────────────────────────────────
+async function connect() {
+  try {
+    port = await navigator.serial.requestPort();
+    await port.open({baudRate: 115200});
+    reader = port.readable.getReader();
+    writer = port.writable.getWriter();
+    readerLoop();
+    setConnected(true);
+    log('Connected', 'log-ok');
+
+    await sendCommand('HELLO');
+    const res = await readUntilOk();
+    if (res.ok) {
+      log('Device: ' + res.lines.join(' '), 'log-ok');
+      await loadFromDevice();
+    } else {
+      log('HELLO failed', 'log-err');
+    }
+  } catch(e) {
+    log('Connect error: ' + e.message, 'log-err');
+    setConnected(false);
+  }
+}
+
+function setConnected(v) {
+  document.getElementById('status-dot').className = v ? 'connected' : '';
+  document.getElementById('status-label').textContent = v ? 'Connected' : 'Disconnected';
+  document.getElementById('btn-connect').textContent = v ? 'Disconnect' : 'Connect';
+  document.getElementById('btn-load').disabled = !v;
+  document.getElementById('btn-save').disabled = !v;
+  if (!v) { port = null; reader = null; writer = null; }
+}
+
+async function disconnect() {
+  try {
+    if (reader) { await reader.cancel(); reader.releaseLock(); }
+    if (writer) { writer.releaseLock(); }
+    if (port) { await port.close(); }
+  } catch(e) {}
+  setConnected(false);
+  log('Disconnected');
+}
+
+// ── Load / Save ───────────────────────────────────────────────────────────────
+async function loadFromDevice() {
+  await sendCommand('GET');
+  const res = await readUntilOk();
+  if (!res.ok) { log('GET failed', 'log-err'); return; }
+  const jsonStr = res.lines.join('');
+  try {
+    const profiles = parseJson(jsonStr);
+    renderEditors(profiles);
+    log('Loaded ' + profiles.length + ' profiles', 'log-ok');
+  } catch(e) {
+    log('Parse error: ' + e.message, 'log-err');
+  }
+}
+
+async function saveToDevice() {
+  const profiles = collectProfiles();
+  if (!profiles) return;
+  const json = buildJson(profiles);
+  const enc = new TextEncoder();
+  const bytes = enc.encode(json);
+  await writeLine('SET ' + bytes.length + '\n');
+  await writer.write(bytes);
+  const setRes = await readUntilOk();
+  if (!setRes.ok) { log('SET failed: ' + setRes.lines.join(' '), 'log-err'); return; }
+
+  await sendCommand('SAVE');
+  const saveRes = await readUntilOk();
+  if (saveRes.ok) {
+    log('Saved to flash', 'log-ok');
+  } else {
+    log('SAVE failed: ' + saveRes.lines.join(' '), 'log-err');
+  }
+}
+
+// ── UI rendering ──────────────────────────────────────────────────────────────
+const APP_NAMES = ['Chrome','Claude','Fusion','KiCad','Krita'];
+const ACTION_SLOTS = [
+  ['ew',   'ENC2 CW'],
+  ['eccw', 'ENC2 CCW'],
+  ['x',    'BTN X'],
+  ['y',    'BTN Y'],
+  ['a',    'BTN A'],
+  ['b',    'BTN B'],
+  ['c',    'BTN C'],
+  ['d',    'BTN D'],
+];
+
+function buildKeySelect(id, selectedCode) {
+  const sel = document.createElement('select');
+  sel.id = id;
+  for (const [name, code] of HID_KEYS) {
+    const opt = document.createElement('option');
+    opt.value = code;
+    opt.textContent = name;
+    if (code === selectedCode) opt.selected = true;
+    sel.appendChild(opt);
+  }
+  return sel;
+}
+
+function buildActionCard(profileIdx, slotKey, slotLabel, action) {
+  const card = document.createElement('div');
+  card.className = 'action-card';
+
+  const h = document.createElement('h3');
+  h.textContent = slotLabel;
+  card.appendChild(h);
+
+  const fields = document.createElement('div');
+  fields.className = 'action-fields';
+
+  // Type selector
+  const typeRow = document.createElement('div');
+  typeRow.className = 'action-row';
+  const typeSel = document.createElement('select');
+  typeSel.id = `p${profileIdx}_${slotKey}_type`;
+  [['None',0],['Key',1],['Scroll',2]].forEach(([n,v]) => {
+    const o = document.createElement('option');
+    o.value = v; o.textContent = n;
+    if (v === action.t) o.selected = true;
+    typeSel.appendChild(o);
+  });
+  typeRow.appendChild(typeSel);
+  fields.appendChild(typeRow);
+
+  // Key fields
+  const keyFields = document.createElement('div');
+  keyFields.id = `p${profileIdx}_${slotKey}_keyfields`;
+  keyFields.style.display = action.t === 1 ? 'flex' : 'none';
+  keyFields.style.flexDirection = 'column';
+  keyFields.style.gap = '5px';
+
+  const modRow = document.createElement('div');
+  modRow.className = 'mod-checks';
+  [['Ctrl',MOD_CTRL],['Shift',MOD_SHIFT],['Alt',MOD_ALT],['Gui',MOD_GUI]].forEach(([name,bit]) => {
+    const lbl = document.createElement('label');
+    lbl.className = 'mod-check';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.id = `p${profileIdx}_${slotKey}_mod_${bit}`;
+    cb.checked = !!(action.m & bit);
+    lbl.appendChild(cb);
+    lbl.appendChild(document.createTextNode(name));
+    modRow.appendChild(lbl);
+  });
+  keyFields.appendChild(modRow);
+
+  const keyRow = document.createElement('div');
+  keyRow.className = 'action-row';
+  const keySel = buildKeySelect(`p${profileIdx}_${slotKey}_key`, action.k ?? 0);
+  keyRow.appendChild(keySel);
+  keyFields.appendChild(keyRow);
+  fields.appendChild(keyFields);
+
+  // Scroll fields
+  const scrollFields = document.createElement('div');
+  scrollFields.id = `p${profileIdx}_${slotKey}_scrollfields`;
+  scrollFields.className = 'action-row';
+  scrollFields.style.display = action.t === 2 ? 'flex' : 'none';
+  const deltaLabel = document.createElement('label');
+  deltaLabel.textContent = 'Delta:';
+  deltaLabel.style.color = 'var(--text2)';
+  const deltaInput = document.createElement('input');
+  deltaInput.type = 'number';
+  deltaInput.className = 'tiny';
+  deltaInput.id = `p${profileIdx}_${slotKey}_delta`;
+  deltaInput.min = -127; deltaInput.max = 127;
+  deltaInput.value = action.d ?? 0;
+  scrollFields.appendChild(deltaLabel);
+  scrollFields.appendChild(deltaInput);
+  fields.appendChild(scrollFields);
+
+  // Label field (shared)
+  const labelRow = document.createElement('div');
+  labelRow.className = 'action-row';
+  const labelTxt = document.createElement('label');
+  labelTxt.textContent = 'Label:';
+  labelTxt.style.color = 'var(--text2)';
+  const labelInput = document.createElement('input');
+  labelInput.type = 'text';
+  labelInput.className = 'narrow';
+  labelInput.id = `p${profileIdx}_${slotKey}_label`;
+  labelInput.maxLength = 8;
+  labelInput.value = action.l && action.l !== '---' ? action.l : '';
+  labelRow.appendChild(labelTxt);
+  labelRow.appendChild(labelInput);
+  fields.appendChild(labelRow);
+
+  card.appendChild(fields);
+
+  // Show/hide conditional fields
+  typeSel.addEventListener('change', () => {
+    const t = parseInt(typeSel.value);
+    keyFields.style.display    = t === 1 ? 'flex' : 'none';
+    scrollFields.style.display = t === 2 ? 'flex' : 'none';
+  });
+
+  return card;
+}
+
+function renderEditors(profiles) {
+  const tabsEl = document.getElementById('tabs');
+  const editorsEl = document.getElementById('editors');
+  tabsEl.innerHTML = '';
+  editorsEl.innerHTML = '';
+
+  profiles.forEach((p, i) => {
+    const tab = document.createElement('div');
+    tab.className = 'tab' + (i === 0 ? ' active' : '');
+    tab.textContent = `${i+1}. ${p.name}`;
+    tab.dataset.idx = i;
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.profile-editor').forEach(e => e.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(`editor-${i}`).classList.add('active');
+    });
+    tabsEl.appendChild(tab);
+
+    const editor = document.createElement('div');
+    editor.className = 'profile-editor' + (i === 0 ? ' active' : '');
+    editor.id = `editor-${i}`;
+
+    // Meta row
+    const meta = document.createElement('div');
+    meta.className = 'profile-meta';
+
+    const nameGroup = document.createElement('div');
+    nameGroup.className = 'field-group';
+    const nameLbl = document.createElement('label');
+    nameLbl.textContent = 'Profile Name';
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text'; nameInput.className = 'wider';
+    nameInput.id = `p${i}_name`; nameInput.maxLength = 15;
+    nameInput.value = p.name;
+    nameInput.addEventListener('input', () => { tab.textContent = `${i+1}. ${nameInput.value}`; });
+    nameGroup.appendChild(nameLbl); nameGroup.appendChild(nameInput);
+    meta.appendChild(nameGroup);
+
+    const elGroup = document.createElement('div');
+    elGroup.className = 'field-group';
+    const elLbl = document.createElement('label');
+    elLbl.textContent = 'ENC2 Label';
+    const elInput = document.createElement('input');
+    elInput.type = 'text'; elInput.className = 'narrow';
+    elInput.id = `p${i}_el`; elInput.maxLength = 8;
+    elInput.value = p.el;
+    elGroup.appendChild(elLbl); elGroup.appendChild(elInput);
+    meta.appendChild(elGroup);
+
+    const appGroup = document.createElement('div');
+    appGroup.className = 'field-group';
+    const appLbl = document.createElement('label');
+    appLbl.textContent = 'App';
+    const appSel = document.createElement('select');
+    appSel.id = `p${i}_app`;
+    APP_NAMES.forEach((name, ai) => {
+      const opt = document.createElement('option');
+      opt.value = ai; opt.textContent = name;
+      if (ai === p.app) opt.selected = true;
+      appSel.appendChild(opt);
+    });
+    appGroup.appendChild(appLbl); appGroup.appendChild(appSel);
+    meta.appendChild(appGroup);
+
+    editor.appendChild(meta);
+
+    const grid = document.createElement('div');
+    grid.className = 'actions-grid';
+    for (const [key, label] of ACTION_SLOTS) {
+      grid.appendChild(buildActionCard(i, key, label, p[key]));
+    }
+    editor.appendChild(grid);
+    editorsEl.appendChild(editor);
+  });
+}
+
+function collectAction(profileIdx, slotKey) {
+  const t = parseInt(document.getElementById(`p${profileIdx}_${slotKey}_type`).value);
+  const label = document.getElementById(`p${profileIdx}_${slotKey}_label`).value.trim() || '---';
+  if (t === 0) return {t:0, m:0, k:0, d:0, l:'---'};
+  if (t === 1) {
+    let mod = 0;
+    for (const [,bit] of [['Ctrl',MOD_CTRL],['Shift',MOD_SHIFT],['Alt',MOD_ALT],['Gui',MOD_GUI]]) {
+      if (document.getElementById(`p${profileIdx}_${slotKey}_mod_${bit}`).checked) mod |= bit;
+    }
+    const k = parseInt(document.getElementById(`p${profileIdx}_${slotKey}_key`).value);
+    return {t:1, m:mod, k, d:0, l:label};
+  }
+  const d = parseInt(document.getElementById(`p${profileIdx}_${slotKey}_delta`).value) || 0;
+  return {t:2, m:0, k:0, d, l:label};
+}
+
+function collectProfiles() {
+  const tabs = document.querySelectorAll('.tab');
+  if (tabs.length === 0) { log('No profiles loaded', 'log-err'); return null; }
+  const profiles = [];
+  tabs.forEach((tab, i) => {
+    const p = {
+      app:  parseInt(document.getElementById(`p${i}_app`).value),
+      name: document.getElementById(`p${i}_name`).value.slice(0, 15),
+      el:   document.getElementById(`p${i}_el`).value.slice(0, 8),
+    };
+    for (const [key] of ACTION_SLOTS) p[key] = collectAction(i, key);
+    profiles.push(p);
+  });
+  return profiles;
+}
+
+// ── Wiring ────────────────────────────────────────────────────────────────────
+document.getElementById('btn-connect').addEventListener('click', async () => {
+  if (port) await disconnect();
+  else await connect();
+});
+document.getElementById('btn-load').addEventListener('click', loadFromDevice);
+document.getElementById('btn-save').addEventListener('click', saveToDevice);
+</script>
+</body>
+</html>

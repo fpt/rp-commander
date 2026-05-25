@@ -26,9 +26,9 @@ tusb_desc_device_t const desc_device = {
     .bLength            = sizeof(tusb_desc_device_t),
     .bDescriptorType    = TUSB_DESC_DEVICE,
     .bcdUSB             = 0x0200,
-    .bDeviceClass       = 0x00,
-    .bDeviceSubClass    = 0x00,
-    .bDeviceProtocol    = 0x00,
+    .bDeviceClass       = TUSB_CLASS_MISC,
+    .bDeviceSubClass    = MISC_SUBCLASS_COMMON,
+    .bDeviceProtocol    = MISC_PROTOCOL_IAD,
     .bMaxPacketSize0    = CFG_TUD_ENDPOINT0_SIZE,
     .idVendor           = USB_VID,
     .idProduct          = USB_PID,
@@ -45,10 +45,18 @@ uint8_t const *tud_descriptor_device_cb(void) {
 
 // ── Configuration descriptor ──────────────────────────────────────────────────
 
-enum { ITF_HID = 0, ITF_COUNT };
+enum {
+    ITF_HID      = 0,
+    ITF_CDC_CTRL = 1,
+    ITF_CDC_DATA = 2,
+    ITF_COUNT    = 3,
+};
 
-#define CONFIG_TOTAL_LEN  (TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN)
-#define EPNUM_HID  0x81
+#define CONFIG_TOTAL_LEN  (TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN + TUD_CDC_DESC_LEN)
+#define EPNUM_HID        0x81
+#define EPNUM_CDC_NOTIF  0x82
+#define EPNUM_CDC_OUT    0x02
+#define EPNUM_CDC_IN     0x83
 
 uint8_t const desc_configuration[] = {
     TUD_CONFIG_DESCRIPTOR(1, ITF_COUNT, 0, CONFIG_TOTAL_LEN,
@@ -56,6 +64,8 @@ uint8_t const desc_configuration[] = {
     TUD_HID_DESCRIPTOR(ITF_HID, 0, HID_ITF_PROTOCOL_NONE,
                        sizeof(hid_report_desc), EPNUM_HID,
                        CFG_TUD_HID_EP_BUFSIZE, 10),
+    TUD_CDC_DESCRIPTOR(ITF_CDC_CTRL, 4, EPNUM_CDC_NOTIF, 8,
+                       EPNUM_CDC_OUT, EPNUM_CDC_IN, 64),
 };
 
 uint8_t const *tud_descriptor_configuration_cb(uint8_t index) {
@@ -72,6 +82,7 @@ static const char *string_desc[] = {
     "RP2040-Zero",        // 1: Manufacturer
     "Commander",          // 2: Product
     serial_str,           // 3: Serial (filled from flash unique ID)
+    "Commander CDC",      // 4: CDC interface
 };
 
 uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {

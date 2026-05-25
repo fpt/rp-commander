@@ -23,6 +23,8 @@
 #include "usb_hid.h"
 #include "profiles.h"
 #include "ui.h"
+#include "cdc_config.h"
+#include "config_store.h"
 
 // ── Framebuffer ───────────────────────────────────────────────────────────────
 
@@ -80,6 +82,11 @@ int main(void) {
     encoder_init();
     buttons_init();
 
+    // Load saved config from flash
+    static char cfg_json[4096];
+    if (config_store_load(cfg_json, sizeof(cfg_json)) > 0)
+        profiles_from_json(cfg_json);
+
     // Initial UI
     ui_draw(fb, cur_profile);
     lcd_flush_full(fb);
@@ -90,6 +97,7 @@ int main(void) {
     while (1) {
         // ── USB ─────────────────────────────────────────────────────────────
         usb_hid_task();
+        cdc_config_task();
 
         // ── Consume inputs (must happen every loop to keep queues clear) ────
         int     d1      = encoder_consume(0);

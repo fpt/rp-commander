@@ -10,6 +10,7 @@
 #define _PROFILES_H_
 
 #include <stdint.h>
+#include <stddef.h>
 #include "class/hid/hid.h"   // HID_KEY_xxx, KEYBOARD_MODIFIER_xxx
 
 // ── Action (one HID event) ────────────────────────────────────────────────────
@@ -32,11 +33,11 @@ typedef struct {
 
 typedef struct {
     uint8_t      app_idx;      // index into g_apps[]
-    const char  *name;         // profile name, e.g. "Sketch"
+    char         name[16];     // profile name, e.g. "Sketch"
     // ENC2 (right encoder) action
     action_t     enc2_cw;
     action_t     enc2_ccw;
-    const char  *enc2_label;   // short label shown on display
+    char         enc2_label[9]; // short label shown on display
     // Per-button actions
     action_t     btn_x;        // left-side button
     action_t     btn_y;        // right-side button
@@ -65,8 +66,8 @@ typedef struct {
 extern const app_t     g_apps[];
 extern const int       g_num_apps;
 
-extern const profile_t g_profiles[];
-extern const int       g_num_profiles;
+extern profile_t g_profiles[];
+extern const int g_num_profiles;
 
 // ── Navigation helpers ────────────────────────────────────────────────────────
 
@@ -75,5 +76,11 @@ int profile_app(int profile_idx);
 
 // Find the first profile index whose app_idx == app
 int profile_first_for_app(int app_idx);
+
+// Serialize all profiles to compact JSON. Returns total length written.
+int profiles_to_json(char *buf, size_t bufsize);
+
+// Parse compact JSON and update g_profiles[]. Returns 0 on success, -1 on error.
+int profiles_from_json(const char *json);
 
 #endif // _PROFILES_H_
