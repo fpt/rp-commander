@@ -1,6 +1,6 @@
 # ardu-commander Makefile
 
-.PHONY: help build clean deploy monitor shell docker-build rebuild info
+.PHONY: help build clean deploy monitor shell docker-build rebuild info icons
 
 .DEFAULT_GOAL := help
 
@@ -80,7 +80,7 @@ clean: ## Remove build artefacts
 
 ##@ Deployment
 
-deploy: ## Upload firmware to RP2040 (hold BOOTSEL, connect USB, release)
+deploy: build ## Upload firmware to RP2040 (hold BOOTSEL, connect USB, release)
 	@if [ ! -f "$(UF2_FILE)" ]; then $(MAKE) build; fi
 	@if [ -z "$(MOUNT_POINT)" ]; then \
 		echo "$(COLOR_YELLOW)RP2040 not detected. Hold BOOTSEL then connect USB.$(COLOR_RESET)"; \
@@ -91,6 +91,11 @@ deploy: ## Upload firmware to RP2040 (hold BOOTSEL, connect USB, release)
 	@echo "$(COLOR_GREEN)Deployed!$(COLOR_RESET)"
 
 flash: deploy ## Alias for deploy
+
+##@ Icons
+
+icons: ## Generate src/icons_data.h from resources/ (requires: pip3 install Pillow cairosvg)
+	python3 tools/make_icons.py
 
 ##@ Development
 

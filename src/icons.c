@@ -1,9 +1,15 @@
 // SPDX-License-Identifier: MIT
-// App icon renderers — simple geometric shapes in RGB565
+// App icon renderers — geometric placeholders with optional real icon overlay.
+// Run `make icons` to generate src/icons_data.h from resources/ and enable
+// real brand icons in place of the geometric shapes below.
 
 #include "icons.h"
 #include "lcd.h"
 #include "profiles.h"
+
+#if __has_include("icons_data.h")
+#include "icons_data.h"
+#endif
 
 // ── Primitive helpers ────────────────────────────────────────────────────────
 
@@ -42,20 +48,40 @@ static void icon_chrome(uint16_t *fb, int x, int y, int sz, bool sel) {
     if (sel) draw_rect(fb, x, y, sz, sz, dim);
 }
 
-// ── Claude: "C" shape in Anthropic orange ────────────────────────────────────
+// ── Claude: orange mascot blob with two feet ─────────────────────────────────
+//
+//   ▐▛███▜▌    rounded orange body
+//   ▜█████▛▘
+//    ▘▘ ▝▝     two small feet
+
+static void draw_claude_mascot(uint16_t *fb, int x, int y, int sz, bool sel, int dy) {
+    uint16_t brd = sel ? COL_WHITE : COL_LGRAY;
+    fill_rect(fb, x, y, sz, sz, COL_BLACK);
+
+    int m  = sz / 8;
+    int bx = x + m,        bw = sz - 2 * m;
+    int bt = y + m + dy,   bh = sz * 5 / 8;
+
+    // Rounded body (skip single-pixel corners)
+    fill_rect(fb, bx + 1, bt,     bw - 2, bh,     COL_ORANGE);
+    fill_rect(fb, bx,     bt + 1, bw,     bh - 2, COL_ORANGE);
+
+    // Two stubby feet below the body
+    int fw = bw / 4,  fh = sz / 8;
+    int fy = bt + bh - 1;
+    fill_rect(fb, bx + fw / 2,               fy, fw, fh, COL_ORANGE);
+    fill_rect(fb, bx + bw - fw - fw / 2, fy, fw, fh, COL_ORANGE);
+
+    if (sel) draw_rect(fb, x, y, sz, sz, brd);
+}
 
 static void icon_claude(uint16_t *fb, int x, int y, int sz, bool sel) {
-    uint16_t bg  = RGB565( 20,  20,  20);
-    uint16_t acc = RGB565(210, 110,  50);
-    uint16_t brd = sel ? COL_WHITE : COL_LGRAY;
-    int t = sz / 7;    // thickness
-    fill_rect(fb, x, y, sz, sz, bg);
-    // Outer "C": top bar, left side, bottom bar
-    fill_rect(fb, x + t,     y + t,        sz - 2*t, t,  acc);  // top
-    fill_rect(fb, x + t,     y + t,        t, sz - 2*t, acc);  // left
-    fill_rect(fb, x + t,     y + sz - 2*t, sz - 2*t, t,  acc);  // bottom
-    // Gap on right — leave open (C shape)
-    if (sel) draw_rect(fb, x, y, sz, sz, brd);
+    draw_claude_mascot(fb, x, y, sz, sel, 0);
+}
+
+void icon_claude_anim(uint16_t *fb, int x, int y, int sz, bool sel, int frame) {
+    static const int8_t dy_tbl[8] = {0, -2, -5, -7, -5, -2, 0, 2};
+    draw_claude_mascot(fb, x, y, sz, sel, dy_tbl[frame & 7]);
 }
 
 // ── Fusion: bold "F" in blue ──────────────────────────────────────────────────
@@ -114,15 +140,59 @@ static void icon_krita(uint16_t *fb, int x, int y, int sz, bool sel) {
     if (sel) draw_rect(fb, x, y, sz, sz, brd);
 }
 
+// ── Real-icon blit (used when icons_data.h is present) ───────────────────────
+
+#ifdef ICON_DATA_SIZE
+static void blit_icon(uint16_t *fb, int x, int y, int cell,
+                      const uint16_t *data, bool selected) {
+    int isz = ICON_DATA_SIZE;
+    int off = (cell - isz) / 2;   // centre within cell
+    fill_rect(fb, x, y, cell, cell, COL_BLACK);
+    for (int row = 0; row < isz; row++) {
+        int dy = y + off + row;
+        if (dy < 0 || dy >= LCD_H) continue;
+        for (int col = 0; col < isz; col++) {
+            int dx = x + off + col;
+            if (dx < 0 || dx >= LCD_W) continue;
+            fb[dy * LCD_W + dx] = data[row * isz + col];
+        }
+    }
+    if (selected) draw_rect(fb, x, y, cell, cell, COL_WHITE);
+}
+#endif
+
 // ── Dispatch ──────────────────────────────────────────────────────────────────
 
 void icon_draw(uint16_t *fb, int x, int y, int size, int icon_idx, bool selected) {
     switch (icon_idx) {
-    case ICON_CHROME: icon_chrome(fb, x, y, size, selected); break;
-    case ICON_CLAUDE: icon_claude(fb, x, y, size, selected); break;
-    case ICON_FUSION: icon_fusion(fb, x, y, size, selected); break;
-    case ICON_KICAD:  icon_kicad(fb, x, y, size, selected); break;
-    case ICON_KRITA:  icon_krita(fb, x, y, size, selected); break;
+    case ICON_CHROME:
+#ifdef ICON_DATA_CHROME
+        blit_icon(fb, x, y, size, icon_data_chrome, selected); break;
+#else
+        icon_chrome(fb, x, y, size, selected); break;
+#endif
+    case ICON_CLAUDE:
+        // Always use animated geometric mascot; ui_claude_anim_tick() overrides
+        // the strip cell when this profile is active.
+        icon_claude(fb, x, y, size, selected); break;
+    case ICON_FUSION:
+#ifdef ICON_DATA_FUSION
+        blit_icon(fb, x, y, size, icon_data_fusion, selected); break;
+#else
+        icon_fusion(fb, x, y, size, selected); break;
+#endif
+    case ICON_KICAD:
+#ifdef ICON_DATA_KICAD
+        blit_icon(fb, x, y, size, icon_data_kicad, selected); break;
+#else
+        icon_kicad(fb, x, y, size, selected); break;
+#endif
+    case ICON_KRITA:
+#ifdef ICON_DATA_KRITA
+        blit_icon(fb, x, y, size, icon_data_krita, selected); break;
+#else
+        icon_krita(fb, x, y, size, selected); break;
+#endif
     default:
         fill_rect(fb, x, y, size, size, COL_GRAY);
         break;

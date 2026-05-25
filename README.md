@@ -42,6 +42,12 @@ make quick          # build + flash (hold BOOTSEL on RP2040 before connecting)
 make monitor        # UART console via USB-serial adapter on GP0 (TX) / GP1 (RX)
 ```
 
+## Icon resources
+
+Source icon images are in `resources/`. The firmware currently uses geometric
+placeholder icons (`src/icons.c`). To use the real brand icons, convert each
+image to a 32×32 RGB565 C array with `tools/make_icon.py` (not yet created).
+
 ## Customising shortcuts
 
 Edit `src/profiles.c`. Each profile defines ENC2 CW/CCW, X, Y, A, B, C, D actions

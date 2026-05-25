@@ -8,6 +8,7 @@ make deploy         # copy commander.uf2 to RP2040 in BOOTSEL mode
 make quick          # build + deploy
 make monitor        # screen to UART0 (requires USB-serial adapter on GP0/GP1)
 make docker-build   # one-time Docker image creation
+make icons          # convert resources/ → src/icons_data.h (pip3 install Pillow cairosvg)
 ```
 
 ## Hardware
@@ -101,8 +102,8 @@ Fusion/Modeling → KiCad/Schematics → KiCad/PCB → Krita/Painting → (wrap)
 ## LCD notes
 
 - ST7789 240×240 on SPI0 at 40 MHz
-- `MADCTL = 0xC0` (MY|MX = 180° rotation)
-- Row address offset = 80 (240×240 panel in a 240×320 GRAM, at 180°)
+- `MADCTL = 0x00` (0° rotation — no flip)
+- Row address offset = 0 (for 180°: MADCTL=0xC0, ROW_OFFSET=80)
 - RGB565 values in framebuffer are byte-swapped for DMA/SPI big-endian output:
   use `RGB565(r,g,b)` macro (applies `__builtin_bswap16`) or predefined `COL_xxx`
 - `lcd_flush_full()` uses DMA; `lcd_flush_region()` is blocking row-by-row SPI
@@ -140,6 +141,30 @@ For Windows, change `_G` to `_C` (LEFTCTRL) in `profiles.c`.
 | File | Contents |
 |------|----------|
 | `docs/WIRING.md` | Physical wiring table (LCD, encoders, buttons, optional interfaces) |
+
+## Resources
+
+Source icon images live in `resources/`. They are not used directly by the firmware —
+they must be converted to 32×32 RGB565 C arrays and embedded in `src/icons.c`.
+
+| File | App |
+|------|-----|
+| `Google_Chrome_icon_(February_2022).svg` | Chrome |
+| `Claude_icon.png` | Claude |
+| `fusion-360-product-design-extension-2023-simplified-badge-75x75.png.webp` | Fusion 360 |
+| `kicad.png` | KiCad |
+| `Calligra_Krita_icon.svg.png` | Krita |
+
+Conversion pipeline (Python + Pillow):
+```bash
+make icons                      # converts all resources/ → src/icons_data.h
+# or directly:
+python3 tools/make_icons.py [--size N]   # default 32×32
+```
+
+`src/icons_data.h` is auto-included by `src/icons.c` via `__has_include`.
+Each successfully converted icon replaces the corresponding geometric placeholder;
+missing or failed icons fall back to the geometric shape automatically.
 
 ## Arduino sketches (kept for hardware reference)
 

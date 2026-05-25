@@ -5,6 +5,7 @@
 #define _UI_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 
 // ── Layout constants (all in pixels) ─────────────────────────────────────────
 //
@@ -28,6 +29,11 @@
 #define UI_BTN_Y    180
 #define UI_BTN_H     60
 
+// Mid-row large icon region (used for Claude animation partial flush)
+#define UI_MID_ICON_X    4
+#define UI_MID_ICON_Y   (UI_MID_Y + 16)
+#define UI_MID_ICON_SZ  48
+
 // ── API ───────────────────────────────────────────────────────────────────────
 
 // Full redraw into framebuf. Call after any state change.
@@ -39,5 +45,10 @@ void ui_draw_mid(uint16_t *fb, int profile_idx);      // middle row
 void ui_draw_enc(uint16_t *fb, int profile_idx);      // encoder row
 void ui_draw_btns(uint16_t *fb, int profile_idx,
                   uint8_t held_mask);                 // button row
+
+// Advance the Claude mascot bounce animation.  Returns true when the strip
+// cell was redrawn and the caller should flush (0, UI_STRIP_Y, LCD_W, UI_STRIP_H).
+// No-op (returns false) when the active app is not Claude.
+bool ui_claude_anim_tick(uint16_t *fb, int profile_idx);
 
 #endif // _UI_H_

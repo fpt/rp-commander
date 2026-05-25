@@ -55,12 +55,12 @@ const profile_t g_profiles[] = {
         .enc2_cw    = SCR(-1, "Down"),
         .enc2_ccw   = SCR(+1, "Up"),
         .enc2_label = "Scroll",
-        .btn_x      = KEY(_G,   ARROW_UP,   "Top"),
-        .btn_y      = KEY(_G,   ARROW_DOWN, "Bottom"),
-        .btn_a      = KEY(_G,   Z,          "Undo"),
-        .btn_b      = KEY(_G,   C,          "Copy"),
-        .btn_c      = KEY(0,    RETURN,     "Send"),
-        .btn_d      = KEY(_G,   A,          "Sel All"),
+        .btn_x      = KEY(_S,   TAB,    "S+Tab"),
+        .btn_y      = KEY(0,    RETURN, "Enter"),
+        .btn_a      = KEY(0,    1,      "1"),
+        .btn_b      = KEY(0,    2,      "2"),
+        .btn_c      = KEY(0,    3,      "3"),
+        .btn_d      = KEY(0,    4,      "4"),
     },
 
     // ── Fusion 360 / Sketch ───────────────────────────────────────────────────

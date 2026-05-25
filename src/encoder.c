@@ -5,6 +5,7 @@
 #include "config.h"
 
 #include "hardware/gpio.h"
+#include "hardware/sync.h"
 #include "pico/stdlib.h"
 
 static volatile int enc_pos[2]    = {0, 0};

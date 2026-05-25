@@ -30,8 +30,24 @@ static uint16_t fb[LCD_W * LCD_H];
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
-static int     cur_profile = 0;
-static uint8_t held_mask   = 0;   // which of A-D are currently held
+static int      cur_profile   = 0;
+static uint8_t  held_mask     = 0;
+static bool     lcd_on        = true;
+static uint32_t last_event_ms = 0;
+
+#define LCD_SLEEP_MS  30000U   // 30 seconds of inactivity → backlight off
+
+// Returns true if the LCD was sleeping and has just been woken.
+// On wake: drains encoder accumulators so no phantom movement.
+static bool try_wake(void) {
+    if (lcd_on) return false;
+    lcd_set_backlight(80);
+    lcd_on        = true;
+    last_event_ms = to_ms_since_boot(get_absolute_time());
+    encoder_consume(0);
+    encoder_consume(1);
+    return true;
+}
 
 // ── Action dispatch ───────────────────────────────────────────────────────────
 
@@ -68,16 +84,43 @@ int main(void) {
     ui_draw(fb, cur_profile);
     lcd_flush_full(fb);
 
-    uint8_t prev_held = 0;
+    uint8_t  prev_held = 0;
+    last_event_ms      = to_ms_since_boot(get_absolute_time());
 
     while (1) {
         // ── USB ─────────────────────────────────────────────────────────────
-        usb_hid_task();   // calls tud_task() + manages key/scroll queue
+        usb_hid_task();
+
+        // ── Consume inputs (must happen every loop to keep queues clear) ────
+        int     d1      = encoder_consume(0);
+        int     d2      = encoder_consume(1);
+        uint8_t pressed = buttons_scan();
+
+        bool any = (d1 != 0 || d2 != 0 || pressed != 0);
+
+        // ── Wake from sleep ─────────────────────────────────────────────────
+        // Any input wakes the LCD; the triggering input is discarded so
+        // no accidental profile-change or keypress fires on wake.
+        if (any && try_wake()) continue;
+
+        // ── Sleep check ─────────────────────────────────────────────────────
+        if (lcd_on && to_ms_since_boot(get_absolute_time()) - last_event_ms > LCD_SLEEP_MS) {
+            lcd_set_backlight(0);
+            lcd_on = false;
+        }
+
+        if (!lcd_on) continue;   // nothing more to do while dark
 
         // ── ENC1: profile navigation ────────────────────────────────────────
-        int d1 = encoder_consume(0);
-        if (d1 != 0) {
-            cur_profile = (cur_profile + d1 % g_num_profiles + g_num_profiles)
+        // EC11 emits 2 raw counts per detent; negate to invert direction.
+        static int enc1_rem = 0;
+        enc1_rem -= d1;                    // negate = invert physical direction
+        int enc1_steps = enc1_rem / 2;    // 1 step per click
+        enc1_rem -= enc1_steps * 2;
+
+        if (enc1_steps != 0) {
+            last_event_ms = to_ms_since_boot(get_absolute_time());
+            cur_profile = (cur_profile + enc1_steps % g_num_profiles + g_num_profiles)
                           % g_num_profiles;
             ui_draw(fb, cur_profile);
             lcd_flush_full(fb);
@@ -87,17 +130,15 @@ int main(void) {
         }
 
         // ── ENC2: HID action ────────────────────────────────────────────────
-        int d2 = encoder_consume(1);
         if (d2 != 0) {
-            const profile_t *p = &g_profiles[cur_profile];
-            int steps = d2 > 0 ? d2 : -d2;
-            const action_t *act = d2 > 0 ? &p->enc2_cw : &p->enc2_ccw;
+            last_event_ms = to_ms_since_boot(get_absolute_time());
+            const profile_t *p     = &g_profiles[cur_profile];
+            int              steps = d2 > 0 ? d2 : -d2;
+            const action_t  *act   = d2 > 0 ? &p->enc2_ccw : &p->enc2_cw;  // inverted
             for (int i = 0; i < steps; i++) dispatch(act);
         }
 
         // ── Buttons ─────────────────────────────────────────────────────────
-        uint8_t pressed = buttons_scan();
-
         const profile_t *p = &g_profiles[cur_profile];
         const action_t  *btn_acts[BTN_COUNT] = {
             &p->btn_a, &p->btn_b, &p->btn_c, &p->btn_d,
@@ -105,6 +146,7 @@ int main(void) {
         };
 
         if (pressed) {
+            last_event_ms = to_ms_since_boot(get_absolute_time());
             for (int i = 0; i < BTN_COUNT; i++) {
                 if (pressed & (1u << i)) dispatch(btn_acts[i]);
             }
@@ -116,12 +158,16 @@ int main(void) {
             if (button_held((btn_id_t)i)) held_mask |= (1u << i);
         }
 
-        // Refresh button row if held state changed
         if (held_mask != prev_held) {
             prev_held = held_mask;
             ui_draw_btns(fb, cur_profile, held_mask);
             lcd_flush_region(fb, 0, UI_BTN_Y, LCD_W, UI_BTN_H);
         }
+
+        // ── Claude mid-icon animation ────────────────────────────────────────
+        if (ui_claude_anim_tick(fb, cur_profile))
+            lcd_flush_region(fb, UI_MID_ICON_X, UI_MID_ICON_Y,
+                             UI_MID_ICON_SZ, UI_MID_ICON_SZ);
     }
 
     return 0;

@@ -24,11 +24,9 @@
 #define ST_NORON   0x13
 #define ST_DISPON  0x29
 
-// 180° rotation: MY | MX = 0xC0
-// Row offset for 240×240 panel at 180°: the panel covers GRAM rows 0-239 at 0°;
-// at 180° (MY|MX) the effective start address shifts by 80.
-#define MADCTL_VAL  0xC0
-#define ROW_OFFSET  80
+// 0° rotation (no flip).  For 180°: MADCTL_VAL=0xC0, ROW_OFFSET=80.
+#define MADCTL_VAL  0x00
+#define ROW_OFFSET  0
 #define COL_OFFSET  0
 
 // ── Backlight PWM ─────────────────────────────────────────────────────────────

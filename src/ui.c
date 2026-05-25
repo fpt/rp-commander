@@ -8,6 +8,7 @@
 #include "profiles.h"
 
 #include <string.h>
+#include "pico/time.h"
 
 // ── Drawing primitives ────────────────────────────────────────────────────────
 
@@ -181,6 +182,25 @@ void ui_draw_btns(uint16_t *fb, int profile_idx, uint8_t held_mask) {
         int ax  = cx + (cell_w - tw) / 2;
         draw_str(fb, ax, y + 20, al, 1, COL_WHITE, bg);
     }
+}
+
+// ── Claude mascot animation ───────────────────────────────────────────────────
+
+bool ui_claude_anim_tick(uint16_t *fb, int profile_idx) {
+    if (g_apps[g_profiles[profile_idx].app_idx].icon_idx != ICON_CLAUDE) return false;
+
+    static uint32_t last_ms = 0;
+    static int      frame   = 0;
+
+    uint32_t now = to_ms_since_boot(get_absolute_time());
+    if (now - last_ms < 120) return false;
+    last_ms = now;
+    frame   = (frame + 1) & 7;
+
+    // Repaint only the large mid icon
+    fill(fb, UI_MID_ICON_X, UI_MID_ICON_Y, UI_MID_ICON_SZ, UI_MID_ICON_SZ, COL_BLACK);
+    icon_claude_anim(fb, UI_MID_ICON_X, UI_MID_ICON_Y, UI_MID_ICON_SZ, false, frame);
+    return true;
 }
 
 // ── Full redraw ───────────────────────────────────────────────────────────────
