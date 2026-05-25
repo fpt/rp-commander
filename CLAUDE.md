@@ -1,149 +1,147 @@
-# CLAUDE.md — RP2040-Zero USB HID Commander
+# CLAUDE.md — ardu-commander (USB HID Commander)
+
+## Quick commands
+
+```bash
+make build          # build firmware inside Docker
+make deploy         # copy commander.uf2 to RP2040 in BOOTSEL mode
+make quick          # build + deploy
+make monitor        # screen to UART0 (requires USB-serial adapter on GP0/GP1)
+make docker-build   # one-time Docker image creation
+```
 
 ## Hardware
 
 | Component | Part | Interface |
 |-----------|------|-----------|
-| MCU | Waveshare RP2040-Zero | USB-C (TinyUSB HID) |
-| Display | ST7789 SPI LCD 240×240 | Hardware SPI (SPI0) |
-| Encoders | 2–4 × EC11 rotary encoders w/ push switch | GPIO (interrupt) |
-| Switches | Tactile switches | GPIO (pull-up) |
+| MCU | Waveshare RP2040-Zero | USB-C (native USB HID) |
+| Display | ST7789 240×240 | SPI0 (GP2/3/4/5/6/7) |
+| ENC1 | EC11 rotary encoder | GPIO IRQ GP14/15 — **profile nav only** |
+| ENC2 | EC11 rotary encoder | GPIO IRQ GP28/29 — per-profile HID |
+| Buttons | 6 × tact switch (A B C D X Y) | GPIO pull-up GP8-13 |
 
-## RP2040-Zero Pin Availability
+## Available GPIO (RP2040-Zero)
 
-Only pads GP0–GP15 and GP26–GP29 are accessible. GP16 is the onboard WS2812 RGB LED
-(not a general-purpose pad).
+Only GP0–GP15 and GP26–GP29 are accessible. GP16 = onboard WS2812.
 
-Total available: 20 GPIO pins.
+| GPIO | Function |
+|------|----------|
+| GP0  | Optional PIO USB D− |
+| GP1  | Optional PIO USB D+ |
+| GP2  | LCD SCK (SPI0) |
+| GP3  | LCD MOSI (SPI0) |
+| GP4  | LCD RST |
+| GP5  | LCD BL (PWM) |
+| GP6  | LCD DC |
+| GP7  | LCD CS |
+| GP8  | BTN A |
+| GP9  | BTN B |
+| GP10 | BTN C |
+| GP11 | BTN D |
+| GP12 | BTN X (left-side, ENC1 companion) |
+| GP13 | BTN Y (right-side, ENC2 companion) |
+| GP14 | ENC1 A |
+| GP15 | ENC1 B |
+| GP16 | Onboard WS2812 (reserved) |
+| GP26 | Optional Grove SDA (Wire1 / I2C1) |
+| GP27 | Optional Grove SCL |
+| GP28 | ENC2 A |
+| GP29 | ENC2 B |
 
-## Pin Assignment (provisional — adjust in each sketch's `pins.h`)
+## Source layout
 
-### ST7789 — SPI0
-
-| Signal | GPIO |
-|--------|------|
-| SCK    | GP2  |
-| MOSI   | GP3  |
-| RST    | GP4  |
-| BL     | GP5  |
-| DC     | GP6  |
-| CS     | GP7  |
-
-Use the 3-arg Adafruit_ST7789 constructor (hardware SPI). BL is a plain GPIO output
-(HIGH = backlight on):
-```cpp
-SPI.setSCK(2);
-SPI.setTX(3);
-pinMode(5, OUTPUT);
-digitalWrite(5, HIGH);  // backlight on
-Adafruit_ST7789 tft(7, 6, 4);  // CS, DC, RST
-tft.init(240, 240);
+```
+src/
+├── config.h          — pin assignments, timing constants
+├── main.c            — init + event loop
+├── lcd.h / lcd.c     — ST7789 SPI0 driver with DMA (240×240, 180° rotation)
+├── font.h / font.c   — 8×8 bitmap font (from rp-carsensor)
+├── encoder.h / .c    — quadrature encoder with GPIO IRQ
+├── buttons.h / .c    — 6-button debounced scanner
+├── usb_hid.h / .c    — TinyUSB keyboard + mouse report queue
+├── usb_descriptors.c — TinyUSB device/config/HID report descriptors
+├── tusb_config.h     — TinyUSB build config (CFG_TUD_HID=1 only)
+├── profiles.h / .c   — app + profile table with all HID mappings
+├── icons.h / icons.c — per-app icon draw functions (geometric, RGB565)
+└── ui.h / ui.c       — 3-row LCD layout renderer
 ```
 
-### Rotary Encoders — GPIO interrupts
+## UI layout (240×240)
 
-| Encoder | A    | B    |
-|---------|------|------|
-| ENC1    | GP14 | GP15 |
-| ENC2    | GP28 | GP29 |
-
-Wire A/B to GPIO with internal pull-ups (`INPUT_PULLUP`).
-
-Encoder ISR pattern (Philhower core supports interrupts on any GPIO):
-```cpp
-volatile int enc_pos = 0;
-
-void enc_isr() {
-  int a = digitalRead(ENC_A);
-  int b = digitalRead(ENC_B);
-  enc_pos += (a == b) ? 1 : -1;
-}
-
-// In setup():
-pinMode(ENC_A, INPUT_PULLUP);
-pinMode(ENC_B, INPUT_PULLUP);
-attachInterrupt(digitalPinToInterrupt(ENC_A), enc_isr, CHANGE);
+```
+y=  0 ┌────────────────────────────────────────┐
+      │  App strip: 5 icons × 48 px           │ h=48
+y= 48 ├────────────────────────────────────────┤
+      │  Large icon │ App name                 │ h=80
+      │             │ Profile name (×2)        │
+      │             │ ● ○ ○  (dots per profile)│
+y=128 ├──────────────────┬─────────────────────┤
+      │ ← Profile →      │ ENC2: <label>       │ h=52
+      │ X: <action>      │ Y: <action>         │
+y=180 ├──────┬──────┬────┴┬─────┐              │
+      │  A   │  B   │  C  │  D  │              │ h=60
+      │<act> │<act> │<act>│<act>│              │
+y=240 └──────┴──────┴─────┴─────┘
 ```
 
-### Buttons / Switches
+## UX / Navigation
 
-| Button | GPIO |
-|--------|------|
-| BTN A  | GP8  |
-| BTN B  | GP9  |
-| BTN C  | GP10 |
-| BTN D  | GP11 |
-| BTN X  | GP12 |
-| BTN Y  | GP13 |
+| Input | Action |
+|-------|--------|
+| ENC1 CW | Next profile (wraps across apps) |
+| ENC1 CCW | Previous profile |
+| ENC2 CW/CCW | Per-profile HID action (label shown in enc row) |
+| BTN X | Per-profile HID action (shown left in enc row) |
+| BTN Y | Per-profile HID action (shown right in enc row) |
+| BTN A/B/C/D | Per-profile HID actions (bottom row) |
 
-All buttons wired with `INPUT_PULLUP`. Active-low.
+Profile cycle order: Chrome/Browsing → Claude/Chat → Fusion/Sketch →
+Fusion/Modeling → KiCad/Schematics → KiCad/PCB → Krita/Painting → (wrap)
 
-## Optional Interfaces
+## LCD notes
 
-### PIO USB — second USB port (GP0/GP1)
+- ST7789 240×240 on SPI0 at 40 MHz
+- `MADCTL = 0xC0` (MY|MX = 180° rotation)
+- Row address offset = 80 (240×240 panel in a 240×320 GRAM, at 180°)
+- RGB565 values in framebuffer are byte-swapped for DMA/SPI big-endian output:
+  use `RGB565(r,g,b)` macro (applies `__builtin_bswap16`) or predefined `COL_xxx`
+- `lcd_flush_full()` uses DMA; `lcd_flush_region()` is blocking row-by-row SPI
 
-GP0 (D−) and GP1 (D+) are reserved for a PIO-based USB port using the `pio-usb` library.
-This lets the RP2040-Zero act as a USB host (or second device) on those pins while the
-native USB-C remains the primary HID device.
+## USB HID
 
-```cpp
-// Requires "Adafruit_TinyUSB" + "pio-usb" library
-#include <pio_usb.h>
-// pin_dp = 1 (GP1, D+), pin_dm = 0 (GP0, D−)
-```
+- TinyUSB device only (no CDC) — `pico_enable_stdio_usb = 0`
+- Serial debug via UART0 (GP0=TX, GP1=RX, 115200 baud)
+- HID report IDs: 1 = keyboard, 2 = mouse (with scroll wheel)
+- `usb_hid_task()` must be called every loop iteration
+- Key queue: press + auto-release after 30 ms; scroll queue: immediate
 
-Leave GP0/GP1 unconnected when the PIO USB port is not used.
+## Build
 
-### Grove I2C — expansion (GP26/GP27)
+Board: `pico` (generic RP2040). If the Pico SDK has `waveshare_rp2040_zero`,
+set `PICO_BOARD=waveshare_rp2040_zero` in CMakeLists.txt.
 
-GP26 = SDA, GP27 = SCL. These are I2C1 (`Wire1`) pins on RP2040.
+Pico SDK path: `../pico-sdk` (relative to project root).
 
-```cpp
-Wire1.setSDA(26);
-Wire1.setSCL(27);
-Wire1.begin();
-Wire1.setClock(400000);
-```
+## Adding a profile
 
-Compatible with any Grove I2C sensor/module (3.3 V logic).
+1. In `src/profiles.c`, add a new `profile_t` entry to `g_profiles[]`.
+   Set `app_idx` to an existing `ICON_xxx` or add a new app in `g_apps[]`.
+2. Define `enc2_cw/ccw`, `enc2_label`, `btn_x/y/a/b/c/d` using the
+   `KEY(mod, key, label)` or `SCR(delta, label)` macros.
+3. Rebuild — profile count (`g_num_profiles`) and ENC1 wrap update automatically.
 
-## USB HID (TinyUSB via Philhower core)
+## Shortcut platform
 
-Board selection: **Raspberry Pi RP2040** → **Waveshare RP2040 Zero**  
-USB Stack setting: **Adafruit TinyUSB**
+Default platform: **macOS** (`_G` = KEYBOARD_MODIFIER_LEFTGUI = Command).
+For Windows, change `_G` to `_C` (LEFTCTRL) in `profiles.c`.
 
-For a consumer/multimedia HID controller use `<HID-Project.h>`:
-- `Consumer.begin()` — media keys (play/pause, volume, etc.)
-- `Gamepad.begin()` — gamepad axes and buttons
-- `Keyboard.begin()` / `Mouse.begin()` — standard HID (no extra library)
+## Docs
 
-For custom HID descriptor (e.g. knob surface), use TinyUSB directly with a raw
-HID report descriptor.
+| File | Contents |
+|------|----------|
+| `docs/WIRING.md` | Physical wiring table (LCD, encoders, buttons, optional interfaces) |
 
-```cpp
-#include <Adafruit_TinyUSB.h>
-// or for simple keyboard/consumer:
-#include "HID-Project.h"
-```
+## Arduino sketches (kept for hardware reference)
 
-### Step 2 approach: Consumer + Keyboard
-
-Each encoder delta → Consumer volume / media control or Keyboard shortcut.
-Buttons → Keyboard modifiers or Consumer keys.
-LCD → status display (current mode, values).
-
-## Arduino Libraries
-
-| Library | Header | Purpose |
-|---------|--------|---------|
-| `Adafruit GFX Library` | `<Adafruit_GFX.h>` | Graphics primitives |
-| `Adafruit ST7789` | `<Adafruit_ST7789.h>` | Display driver |
-| `HID-Project` | `<HID-Project.h>` | Consumer/Gamepad/Keyboard HID |
-
-## Files
-
-| File | Purpose |
-|------|---------|
-| `step1_hw_test/step1_hw_test.ino` | LCD + encoder + switch bringup test |
-| `step2_usb_hid/step2_usb_hid.ino` | Full USB HID commander |
-| `WIRING.md` | Physical wiring reference |
+`step1_hw_test/` — LCD + encoder + button bringup (Arduino / Philhower core)
+`step2_usb_hid/` — basic USB HID with Keyboard.h + Mouse.h (Arduino)

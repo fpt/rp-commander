@@ -1,15 +1,17 @@
 // USB HID Commander
 // Board: Waveshare RP2040-Zero  →  Raspberry Pi RP2040 (Philhower core)
-// USB Stack: Adafruit TinyUSB
-// Libraries: Adafruit GFX, Adafruit ST7789, HID-Project
+// USB Stack: default (Pico SDK) — uses built-in <Keyboard.h> and <Mouse.h>
+// No extra HID library needed.
 //
-// Each encoder delta → Consumer key (ENC1: volume, ENC2: configurable)
-// Buttons A-D → keyboard shortcuts, X/Y → modifier + key
+// ENC1 → Mouse scroll wheel
+// ENC2 → keyboard shortcuts (left/right arrow; change to taste)
+// Buttons A-D, X, Y → keyboard keys
 
 #include <SPI.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_ST7789.h>
-#include <HID-Project.h>   // Consumer + Keyboard HID
+#include <Keyboard.h>
+#include <Mouse.h>
 
 // ── LCD ───────────────────────────────────────────────────────
 #define LCD_SCK  2
@@ -33,20 +35,19 @@
 #define ENC2_A 28
 #define ENC2_B 29
 
-// ── HID mappings — change these to suit your workflow ─────────
-// Encoder CW / CCW consumer keys:
-#define ENC1_CW  MEDIA_VOLUME_UP
-#define ENC1_CCW MEDIA_VOLUME_DOWN
-#define ENC2_CW  CONSUMER_FAST_FORWARD
-#define ENC2_CCW CONSUMER_REWIND
+// ── HID mappings — change to suit your workflow ───────────────
+// ENC1: scroll wheel — positive = scroll up, negative = scroll down
+// ENC2: keyboard keys sent per step
+#define ENC2_CW_KEY  KEY_RIGHT_ARROW
+#define ENC2_CCW_KEY KEY_LEFT_ARROW
 
-// Button → keyboard key:
-#define KEY_A   KEY_F13
-#define KEY_B   KEY_F14
-#define KEY_C   KEY_F15
-#define KEY_D   KEY_F16
-#define KEY_X   KEY_F17
-#define KEY_Y   KEY_F18
+// Button → keyboard key
+#define KEY_BTN_A KEY_F13
+#define KEY_BTN_B KEY_F14
+#define KEY_BTN_C KEY_F15
+#define KEY_BTN_D KEY_F16
+#define KEY_BTN_X KEY_F17
+#define KEY_BTN_Y KEY_F18
 
 // ─────────────────────────────────────────────────────────────
 
@@ -64,24 +65,24 @@ void isr_enc2() {
   if (a != enc_last_a[1]) { enc_last_a[1] = a; enc_pos[1] += (a == b) ? 1 : -1; }
 }
 
-const int BTN_PINS[]    = {BTN_A, BTN_B, BTN_C, BTN_D, BTN_X, BTN_Y};
-const uint8_t BTN_KEYS[]= {KEY_A, KEY_B, KEY_C, KEY_D, KEY_X, KEY_Y};
-const char* BTN_LABELS[] = {"A", "B", "C", "D", "X", "Y"};
+const int BTN_PINS[]       = {BTN_A,     BTN_B,     BTN_C,     BTN_D,     BTN_X,     BTN_Y};
+const uint8_t BTN_KEYS[]   = {KEY_BTN_A, KEY_BTN_B, KEY_BTN_C, KEY_BTN_D, KEY_BTN_X, KEY_BTN_Y};
+const char*   BTN_LABELS[] = {"A",       "B",       "C",       "D",       "X",       "Y"};
 #define NUM_BTNS 6
 
-void lcdStatus(int pos0, int pos1, bool* btns) {
+void lcdStatus(int scroll_total, int enc2_pos, bool* btns) {
   tft.fillScreen(ST77XX_BLACK);
   tft.setTextSize(2);
 
   tft.setTextColor(ST77XX_CYAN);
-  tft.setCursor(10, 10);  tft.print("ENC1 "); tft.println(pos0);
-  tft.setCursor(10, 36);  tft.print("ENC2 "); tft.println(pos1);
+  tft.setCursor(10, 10);  tft.print("SCR "); tft.println(scroll_total);
+  tft.setCursor(10, 36);  tft.print("ENC2 "); tft.println(enc2_pos);
 
   tft.setTextColor(ST77XX_WHITE);
   tft.setCursor(10, 80);
   tft.print("BTN: ");
   for (int i = 0; i < NUM_BTNS; i++) {
-    if (btns[i]) { tft.setTextColor(ST77XX_YELLOW); }
+    if (btns[i]) tft.setTextColor(ST77XX_YELLOW);
     tft.print(BTN_LABELS[i]);
     tft.setTextColor(ST77XX_WHITE);
     tft.print(" ");
@@ -120,8 +121,8 @@ void setup() {
   for (int i = 0; i < NUM_BTNS; i++) pinMode(BTN_PINS[i], INPUT_PULLUP);
 
   // USB HID
-  Consumer.begin();
   Keyboard.begin();
+  Mouse.begin();
 
   delay(500);
   bool no_btns[NUM_BTNS] = {};
@@ -130,39 +131,47 @@ void setup() {
 
 static int last_pos[2] = {};
 static bool last_btn[NUM_BTNS] = {};
+static int scroll_total = 0;
 
 void loop() {
   bool redraw = false;
 
-  // Encoder deltas → consumer keys
-  for (int enc = 0; enc < 2; enc++) {
-    int delta = enc_pos[enc] - last_pos[enc];
-    if (delta == 0) continue;
-    last_pos[enc] = enc_pos[enc];
+  // ENC1 → scroll wheel
+  int delta0 = enc_pos[0] - last_pos[0];
+  if (delta0 != 0) {
+    last_pos[0] = enc_pos[0];
+    scroll_total += delta0;
+    Mouse.move(0, 0, delta0);
     redraw = true;
-
-    ConsumerKeycode cw  = (enc == 0) ? ENC1_CW  : ENC2_CW;
-    ConsumerKeycode ccw = (enc == 0) ? ENC1_CCW : ENC2_CCW;
-    int steps = abs(delta);
-    ConsumerKeycode key = (delta > 0) ? cw : ccw;
-    for (int i = 0; i < steps; i++) {
-      Consumer.write(key);
-      delay(10);
-    }
   }
 
-  // Buttons → keyboard keys (send on press, release on release)
+  // ENC2 → keyboard arrow keys (one keypress per step)
+  int delta1 = enc_pos[1] - last_pos[1];
+  if (delta1 != 0) {
+    last_pos[1] = enc_pos[1];
+    int steps = abs(delta1);
+    uint8_t key = (delta1 > 0) ? ENC2_CW_KEY : ENC2_CCW_KEY;
+    for (int i = 0; i < steps; i++) {
+      Keyboard.press(key);
+      delay(5);
+      Keyboard.release(key);
+      delay(5);
+    }
+    redraw = true;
+  }
+
+  // Buttons → keyboard keys
   for (int i = 0; i < NUM_BTNS; i++) {
     bool pressed = (digitalRead(BTN_PINS[i]) == LOW);
     if (pressed != last_btn[i]) {
       last_btn[i] = pressed;
-      redraw = true;
       if (pressed) Keyboard.press(BTN_KEYS[i]);
       else         Keyboard.release(BTN_KEYS[i]);
+      redraw = true;
     }
   }
 
-  if (redraw) lcdStatus(last_pos[0], last_pos[1], last_btn);
+  if (redraw) lcdStatus(scroll_total, last_pos[1], last_btn);
 
   delay(5);
 }
