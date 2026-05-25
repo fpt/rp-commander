@@ -37,9 +37,9 @@ const profile_t g_profiles[] = {
     {
         .app_idx    = ICON_CHROME,
         .name       = "Browsing",
-        .enc2_cw    = {ACT_KEY, _C,    HID_KEY_TAB,         0, "Next→"},
-        .enc2_ccw   = {ACT_KEY, _C|_S, HID_KEY_TAB,         0, "←Prev"},
-        .enc2_label = "Tab",
+        .enc2_cw    = SCR(+1, "Up"),
+        .enc2_ccw   = SCR(-1, "Down"),
+        .enc2_label = "Scroll",
         .btn_x      = KEY(_G,   EQUAL,        "Zoom+"),
         .btn_y      = KEY(_G,   MINUS,        "Zoom-"),
         .btn_a      = KEY(_G,   BRACKET_LEFT, "Back"),

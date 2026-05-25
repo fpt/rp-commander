@@ -2,6 +2,7 @@
 // Simple 8x8 bitmap font (copied from rp-usbaudio)
 
 #include "font.h"
+#include "lcd.h"
 
 // 8x8 font data - ASCII 32-127, one byte per row, MSB = leftmost pixel
 static const uint8_t font_data[] = {
@@ -202,4 +203,22 @@ static const uint8_t font_data[] = {
 const uint8_t *font_get_char(char c) {
     if (c < 32 || c > 127) c = 32;
     return &font_data[(c - 32) * 8];
+}
+
+void font_draw_char(uint16_t *fb, int x, int y, char c, int scale,
+                    uint16_t fg, uint16_t bg) {
+    const uint8_t *bm = font_get_char(c);
+    for (int row = 0; row < FONT_H; row++) {
+        uint8_t byte = bm[row];
+        for (int col = 0; col < FONT_W; col++) {
+            uint16_t px = (byte & (0x80 >> col)) ? fg : bg;
+            for (int sy = 0; sy < scale; sy++)
+                for (int sx = 0; sx < scale; sx++) {
+                    int dx = x + col * scale + sx;
+                    int dy = y + row * scale + sy;
+                    if (dx >= 0 && dx < LCD_W && dy >= 0 && dy < LCD_H)
+                        fb[dy * LCD_W + dx] = px;
+                }
+        }
+    }
 }

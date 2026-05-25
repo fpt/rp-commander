@@ -5,6 +5,7 @@
 
 #include "icons.h"
 #include "lcd.h"
+#include "font.h"
 #include "profiles.h"
 
 #if __has_include("icons_data.h")
@@ -101,23 +102,19 @@ static void icon_fusion(uint16_t *fb, int x, int y, int sz, bool sel) {
     if (sel) draw_rect(fb, x, y, sz, sz, brd);
 }
 
-// ── KiCad: PCB trace — two pads connected by a green track ───────────────────
+// ── KiCad: "Ki" in green ─────────────────────────────────────────────────────
 
 static void icon_kicad(uint16_t *fb, int x, int y, int sz, bool sel) {
-    uint16_t bg  = RGB565( 10,  30,  10);
-    uint16_t trk = RGB565( 40, 200,  40);
     uint16_t brd = sel ? COL_WHITE : COL_LGRAY;
-    int t = sz / 5;
-    fill_rect(fb, x, y, sz, sz, bg);
-    // Left pad
-    fill_rect(fb, x + t/2, y + sz/2 - t/2, t, t, trk);
-    // Right pad
-    fill_rect(fb, x + sz - t/2 - t, y + sz/2 - t/2, t, t, trk);
-    // Horizontal track connecting pads
-    fill_rect(fb, x + t/2 + t, y + sz/2 - 1, sz - 2*t - t, 3, trk);
-    // Via (small square at centre)
-    int vm = sz / 2 - t/4;
-    fill_rect(fb, x + vm, y + vm, t/2, t/2, COL_YELLOW);
+    fill_rect(fb, x, y, sz, sz, COL_BLACK);
+
+    int scale = sz / 16;                       // 2 at sz=32, 3 at sz=48
+    int tw    = 2 * FONT_W * scale;
+    int lx    = x + (sz - tw) / 2;
+    int ly    = y + (sz - FONT_H * scale) / 2;
+    font_draw_char(fb, lx,                ly, 'K', scale, COL_GREEN, COL_BLACK);
+    font_draw_char(fb, lx + FONT_W*scale, ly, 'i', scale, COL_GREEN, COL_BLACK);
+
     if (sel) draw_rect(fb, x, y, sz, sz, brd);
 }
 

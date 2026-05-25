@@ -5,7 +5,7 @@ set(PICO_BOARD pico CACHE STRING "Board type")
 
 include(pico_sdk_import.cmake)
 
-project(ardu_commander C CXX ASM)
+project(rp_commander C CXX ASM)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
