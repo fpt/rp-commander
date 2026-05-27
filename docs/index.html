@@ -19,7 +19,6 @@
   --text3:  #50505c;
   --ok:     #4caf80;
   --err:    #f06060;
-  --warn:   #f0a040;
   --font:   'Menlo','Consolas','Monaco',monospace;
 }
 body {
@@ -38,20 +37,17 @@ body {
 header {
   background: var(--bg2);
   border-bottom: 1px solid var(--border);
-  padding: 9px 16px;
+  padding: 8px 16px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-shrink: 0;
+  flex-wrap: wrap;
 }
-header h1 { font-size: 14px; font-weight: 700; letter-spacing: 0.06em; flex: 1; }
-.dot {
-  width: 8px; height: 8px; border-radius: 50%;
-  background: var(--err); flex-shrink: 0;
-  transition: background 0.3s;
-}
+header h1 { font-size: 14px; font-weight: 700; letter-spacing: 0.06em; flex: 1; min-width: 120px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--err); flex-shrink: 0; transition: background 0.3s; }
 .dot.on { background: var(--ok); }
-#status-label { font-size: 11px; color: var(--text2); }
+#status-label { font-size: 11px; color: var(--text2); margin-right: 4px; }
 
 /* ── Buttons ─────────────────────────────────────────────────────────────── */
 button {
@@ -71,7 +67,6 @@ button:disabled { opacity: 0.35; cursor: not-allowed; }
 button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
 button.primary:hover:not(:disabled) { background: #4a78ee; border-color: #4a78ee; }
 button.sm { padding: 3px 8px; font-size: 10px; }
-button.icon-btn { padding: 3px 7px; font-size: 13px; line-height: 1; }
 
 /* ── Inputs / selects ────────────────────────────────────────────────────── */
 input[type=text], input[type=number], select {
@@ -88,129 +83,15 @@ input[type=text], input[type=number], select {
 input:focus, select:focus { border-color: var(--accent); }
 input[type=file] { display: none; }
 
-/* ── Layout ──────────────────────────────────────────────────────────────── */
-#layout {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
-  min-height: 0;
-}
-
-/* ── Sidebar ─────────────────────────────────────────────────────────────── */
-#sidebar {
-  width: 248px;
-  flex-shrink: 0;
-  background: var(--bg2);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-.sb-sec {
-  padding: 11px 12px;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-}
-.sb-sec h2 {
-  font-size: 9px;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--text2);
-  margin-bottom: 9px;
-}
-
-/* ── Icon grid ───────────────────────────────────────────────────────────── */
-#icon-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 5px;
-  margin-bottom: 9px;
-}
-.icon-slot {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  cursor: pointer;
-}
-.icon-wrap {
-  position: relative;
-  width: 38px; height: 38px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  overflow: hidden;
-  background: #000;
-  transition: border-color 0.15s;
-}
-.icon-slot:hover .icon-wrap { border-color: var(--accent); }
-.icon-wrap canvas {
-  width: 38px; height: 38px;
-  display: block;
-  image-rendering: pixelated;
-}
-.icon-wrap .ph {
-  position: absolute; inset: 0;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 16px; color: var(--text3);
-  pointer-events: none;
-}
-.icon-slot > span {
-  font-size: 8px; color: var(--text2);
-  text-align: center;
-}
-
-/* ── Log ─────────────────────────────────────────────────────────────────── */
-#log-wrap {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  padding: 9px 12px 10px;
-  min-height: 0;
-}
-#log-wrap h2 {
-  font-size: 9px;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--text2);
-  margin-bottom: 6px;
-  flex-shrink: 0;
-}
-#log {
-  flex: 1;
-  overflow-y: auto;
-  font-size: 10px;
-  color: var(--text2);
-  white-space: pre-wrap;
-  word-break: break-all;
-  min-height: 0;
-}
-.log-ok  { color: var(--ok); }
-.log-err { color: var(--err); }
-.log-tx  { color: var(--accent); }
-
-/* ── Main content ────────────────────────────────────────────────────────── */
-#content { flex: 1; overflow-y: auto; padding: 12px 16px; min-width: 0; }
+/* ── Main scroll area ────────────────────────────────────────────────────── */
+#content { flex: 1; overflow-y: auto; padding: 12px 16px; min-height: 0; }
 
 /* ── Tabs ────────────────────────────────────────────────────────────────── */
-.tabs {
-  display: flex;
-  gap: 2px;
-  flex-wrap: wrap;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 12px;
-}
+.tabs { display: flex; gap: 2px; flex-wrap: wrap; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
 .tab {
-  padding: 5px 13px;
-  cursor: pointer;
-  border-radius: 4px 4px 0 0;
-  background: var(--bg2);
-  border: 1px solid transparent;
-  border-bottom: none;
-  font-size: 11px;
-  color: var(--text2);
-  margin-bottom: -1px;
-  transition: color 0.15s;
+  padding: 5px 14px; cursor: pointer; border-radius: 4px 4px 0 0;
+  background: var(--bg2); border: 1px solid transparent; border-bottom: none;
+  font-size: 11px; color: var(--text2); margin-bottom: -1px; transition: color 0.15s;
 }
 .tab:hover { color: var(--text); }
 .tab.active { background: var(--bg3); border-color: var(--border); color: var(--accent); font-weight: 600; }
@@ -219,161 +100,122 @@ input[type=file] { display: none; }
 .profile-editor { display: none; }
 .profile-editor.active { display: block; }
 
+/* Meta row with icon */
 .profile-meta {
   background: var(--bg2);
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 10px 14px;
   display: flex;
-  gap: 14px;
+  gap: 16px;
+  align-items: flex-start;
   flex-wrap: wrap;
-  align-items: flex-end;
   margin-bottom: 10px;
 }
-.field { display: flex; flex-direction: column; gap: 3px; }
-.field label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text2); }
+.icon-upload-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+.icon-wrap {
+  position: relative;
+  width: 64px; height: 64px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  overflow: hidden;
+  background: #000;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.icon-wrap:hover { border-color: var(--accent); }
+.icon-wrap canvas { width: 64px; height: 64px; display: block; image-rendering: pixelated; }
+.icon-wrap .ph {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; color: var(--text3); pointer-events: none;
+}
+.meta-fields { display: flex; flex-direction: column; gap: 8px; justify-content: center; }
+.field { display: flex; align-items: center; gap: 8px; }
+.field label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text2); width: 52px; flex-shrink: 0; }
 
 /* ── Control sections ────────────────────────────────────────────────────── */
-.ctrl-sec {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 9px 12px;
-  margin-bottom: 8px;
-}
-.ctrl-sec-title {
-  font-size: 9px;
-  text-transform: uppercase;
-  letter-spacing: 0.09em;
-  color: var(--text2);
-  margin-bottom: 7px;
-}
-.ctrl-row {
-  display: flex;
-  gap: 7px;
-}
+.ctrl-sec { background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; padding: 9px 12px; margin-bottom: 8px; }
+.ctrl-sec-title { font-size: 9px; text-transform: uppercase; letter-spacing: 0.09em; color: var(--text2); margin-bottom: 7px; }
+.ctrl-row { display: flex; gap: 7px; }
 .ctrl-row > * { flex: 1; min-width: 0; }
 
 /* ── Action card ─────────────────────────────────────────────────────────── */
-.acard {
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  padding: 8px 9px;
-  transition: border-color 0.15s;
-}
-.acard:focus-within { border-color: #5b8aff88; }
+.acard { background: var(--bg3); border: 1px solid var(--border); border-radius: 5px; padding: 8px 9px; transition: border-color 0.15s; }
+.acard:focus-within { border-color: #5b8aff66; }
+.acard-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.acard-name { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text2); }
+.acard-summary { font-size: 13px; color: var(--accent); font-weight: 700; max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-.acard-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: 6px;
-}
-.acard-name {
-  font-size: 9px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text2);
-}
-.acard-summary {
-  font-size: 13px;
-  color: var(--accent);
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  max-width: 60%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+.type-row { display: flex; gap: 3px; margin-bottom: 6px; }
+.ttype { flex: 1; text-align: center; padding: 3px 4px; font-size: 10px; border: 1px solid var(--border); background: var(--bg2); color: var(--text2); border-radius: 3px; cursor: pointer; transition: all 0.12s; user-select: none; }
+.ttype.on { background: var(--bg4); border-color: var(--accent); color: var(--accent); font-weight: 600; }
 
-/* Type toggle */
-.type-row {
-  display: flex;
-  gap: 3px;
-  margin-bottom: 6px;
-}
-.ttype {
-  flex: 1;
-  text-align: center;
-  padding: 3px 4px;
-  font-size: 10px;
-  border: 1px solid var(--border);
-  background: var(--bg2);
-  color: var(--text2);
-  border-radius: 3px;
-  cursor: pointer;
-  transition: all 0.12s;
-  user-select: none;
-}
-.ttype.on {
-  background: var(--bg4);
-  border-color: var(--accent);
-  color: var(--accent);
-  font-weight: 600;
-}
+.mod-row { display: flex; gap: 3px; flex-wrap: wrap; margin-bottom: 5px; }
+.mod-pill { padding: 2px 8px; font-size: 13px; border: 1px solid var(--border); background: var(--bg2); color: var(--text2); border-radius: 3px; cursor: pointer; transition: all 0.12s; user-select: none; line-height: 1.4; }
+.mod-pill.on { background: var(--accent2); border-color: var(--accent2); color: #fff; }
 
-/* Modifier pills */
-.mod-row {
-  display: flex;
-  gap: 3px;
-  margin-bottom: 5px;
-  flex-wrap: wrap;
-}
-.mod-pill {
-  padding: 2px 8px;
-  font-size: 13px;
-  border: 1px solid var(--border);
-  background: var(--bg2);
-  color: var(--text2);
-  border-radius: 3px;
-  cursor: pointer;
-  transition: all 0.12s;
-  user-select: none;
-  line-height: 1.4;
-}
-.mod-pill.on {
-  background: var(--accent2);
-  border-color: var(--accent2);
-  color: #fff;
-}
-
-/* Key select */
 .key-row { margin-bottom: 5px; }
 .key-row select { width: 100%; font-size: 11px; }
 
-/* Scroll delta */
-.delta-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 5px;
-}
+.delta-row { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
 .delta-row label { font-size: 10px; color: var(--text2); white-space: nowrap; }
 .delta-ctrls { display: flex; align-items: center; gap: 4px; }
-.delta-ctrls button { width: 22px; height: 22px; padding: 0; font-size: 14px; flex-shrink: 0; }
+.delta-ctrls button { width: 22px; height: 22px; padding: 0; font-size: 14px; line-height: 1; }
 .delta-val { min-width: 28px; text-align: center; font-size: 12px; font-weight: 600; }
 
-/* LCD label */
-.lbl-row {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
+.lbl-row { display: flex; align-items: center; gap: 5px; }
 .lbl-row label { font-size: 10px; color: var(--text2); white-space: nowrap; }
 .lbl-row input { flex: 1; min-width: 0; font-size: 11px; }
-.lbl-preview {
-  font-size: 10px;
-  color: var(--text3);
-  white-space: nowrap;
-}
 
-/* Key fields / scroll fields hidden states */
 .key-fields, .scroll-fields { display: none; }
 .key-fields.show, .scroll-fields.show { display: block; }
 
-/* Scrollbar */
+/* ── Log (bottom, read-only) ─────────────────────────────────────────────── */
+#log-section {
+  flex-shrink: 0;
+  height: 96px;
+  border-top: 1px solid var(--border);
+  background: var(--bg2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+#log-header {
+  padding: 3px 12px;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text3);
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#log-header span { flex: 1; }
+#log {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 12px;
+  font-size: 10px;
+  color: var(--text2);
+  white-space: pre-wrap;
+  word-break: break-all;
+  min-height: 0;
+  user-select: text;
+}
+.log-ok  { color: var(--ok); }
+.log-err { color: var(--err); }
+.log-tx  { color: var(--accent); }
+
+/* ── Scrollbar ───────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 3px; }
@@ -388,32 +230,23 @@ input[type=file] { display: none; }
   <button id="btn-connect">Connect</button>
   <button id="btn-load" disabled>↓ Load from Device</button>
   <button id="btn-save" class="primary" disabled>↑ Save to Device</button>
-  <button id="btn-dl-json">↓ JSON</button>
-  <button id="btn-ul-json">↑ JSON</button>
+  <button id="btn-dl-json" disabled>↓ Save JSON</button>
+  <button id="btn-ul-json">↑ Load JSON</button>
 </header>
 
-<div id="layout">
-  <aside id="sidebar">
-
-    <div class="sb-sec">
-      <h2>App Icons</h2>
-      <div id="icon-grid"></div>
-    </div>
-
-    <div id="log-wrap">
-      <h2>Log</h2>
-      <div id="log"></div>
-    </div>
-
-  </aside>
-
-  <main id="content">
-    <div id="tabs" class="tabs"></div>
-    <div id="editors"></div>
-  </main>
+<div id="content">
+  <div id="tabs" class="tabs"></div>
+  <div id="editors"></div>
 </div>
 
-<!-- hidden file inputs -->
+<div id="log-section">
+  <div id="log-header">
+    <span>Serial Log</span>
+    <button class="sm" id="btn-clear-log">Clear</button>
+  </div>
+  <div id="log"></div>
+</div>
+
 <input type="file" id="icon-file-input" accept="image/*">
 <input type="file" id="json-file-input" accept="application/json,.json">
 
@@ -437,31 +270,28 @@ const HID_KEYS = [
   ['Insert',73],['Home',74],['PageUp',75],['Delete',76],['End',77],['PageDown',78],
   ['→',79],['←',80],['↓',81],['↑',82],
 ];
-
-const KEY_SYM = { 40:'↩', 41:'⎋', 42:'⌫', 43:'⇥', 44:'⎵',
-  74:'↖', 75:'⇞', 76:'⌦', 77:'↘', 78:'⇟',
-  79:'→', 80:'←', 81:'↓', 82:'↑' };
-
+const KEY_SYM = {40:'↩',41:'⎋',42:'⌫',43:'⇥',44:'⎵',74:'↖',75:'⇞',76:'⌦',77:'↘',78:'⇟',79:'→',80:'←',81:'↓',82:'↑'};
 const MOD_CTRL=0x01, MOD_SHIFT=0x02, MOD_ALT=0x04, MOD_GUI=0x08;
-const MODS = [
-  { bit: MOD_CTRL,  sym: '⌃', tip: 'Ctrl'  },
-  { bit: MOD_SHIFT, sym: '⇧', tip: 'Shift' },
-  { bit: MOD_ALT,   sym: '⌥', tip: 'Alt'   },
-  { bit: MOD_GUI,   sym: '⌘', tip: 'Cmd'   },
-];
-
+const MODS = [{bit:MOD_CTRL,sym:'⌃',tip:'Ctrl'},{bit:MOD_SHIFT,sym:'⇧',tip:'Shift'},{bit:MOD_ALT,sym:'⌥',tip:'Alt'},{bit:MOD_GUI,sym:'⌘',tip:'Cmd'}];
 const APP_NAMES = ['Chrome','Claude','Fusion','KiCad','Krita'];
-
 const ACTION_SLOTS = [
-  { key:'ew',   name:'ENC2 →', desc:'Encoder clockwise'         },
-  { key:'eccw', name:'ENC2 ←', desc:'Encoder counter-clockwise' },
-  { key:'x',    name:'X',      desc:'Left side button'          },
-  { key:'y',    name:'Y',      desc:'Right side button'         },
-  { key:'a',    name:'A',      desc:'Button A'                  },
-  { key:'b',    name:'B',      desc:'Button B'                  },
-  { key:'c',    name:'C',      desc:'Button C'                  },
-  { key:'d',    name:'D',      desc:'Button D'                  },
+  {key:'ew',   name:'ENC2 →', desc:'Encoder clockwise'},
+  {key:'eccw', name:'ENC2 ←', desc:'Encoder counter-clockwise'},
+  {key:'x',    name:'X',      desc:'Left side button'},
+  {key:'y',    name:'Y',      desc:'Right side button'},
+  {key:'a',    name:'A',      desc:'Button A'},
+  {key:'b',    name:'B',      desc:'Button B'},
+  {key:'c',    name:'C',      desc:'Button C'},
+  {key:'d',    name:'D',      desc:'Button D'},
 ];
+const ICON_SIZE = 32;
+
+// ── State ─────────────────────────────────────────────────────────────────────
+
+// iconData[appNameLower] = Uint16Array (byte-swapped RGB565, 32×32)
+const iconData = {};
+let profilesLoaded = false;
+let pendingIconProfile = null;
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
 
@@ -470,27 +300,41 @@ function keyLabel(code) {
   const e = HID_KEYS.find(([,c]) => c === code);
   return e ? e[0] : '?';
 }
-
-function modStr(mod) {
-  return MODS.filter(m => mod & m.bit).map(m => m.sym).join('');
-}
-
+function modStr(mod) { return MODS.filter(m => mod & m.bit).map(m => m.sym).join(''); }
 function actionSummary(a) {
   if (!a || a.t === 0) return '—';
-  if (a.t === 1) {
-    const s = modStr(a.m) + keyLabel(a.k);
-    return s || '?';
-  }
+  if (a.t === 1) return (modStr(a.m) + keyLabel(a.k)) || '?';
   if (a.t === 2) return a.d >= 0 ? `↑×${a.d}` : `↓×${Math.abs(a.d)}`;
   return '—';
 }
 
-// ── Serial ────────────────────────────────────────────────────────────────────
+// ── Button / state management ─────────────────────────────────────────────────
 
-let port = null, reader = null, writer = null;
-let lineBuf = '', lineQ = [];
+let connected = false;
 
-function log(msg, cls='') {
+function setConnected(v) {
+  connected = v;
+  document.getElementById('sdot').className = 'dot' + (v ? ' on' : '');
+  document.getElementById('status-label').textContent = v ? 'Connected' : 'Disconnected';
+  document.getElementById('btn-connect').textContent = v ? 'Disconnect' : 'Connect';
+  document.getElementById('btn-load').disabled = !v;
+  updateActionButtons();
+  if (!v) { port = null; reader = null; writer = null; }
+}
+
+function setProfilesLoaded(v) {
+  profilesLoaded = v;
+  updateActionButtons();
+}
+
+function updateActionButtons() {
+  document.getElementById('btn-save').disabled = !(connected && profilesLoaded);
+  document.getElementById('btn-dl-json').disabled = !profilesLoaded;
+}
+
+// ── Log ───────────────────────────────────────────────────────────────────────
+
+function log(msg, cls = '') {
   const el = document.getElementById('log');
   const sp = document.createElement('span');
   if (cls) sp.className = cls;
@@ -499,20 +343,23 @@ function log(msg, cls='') {
   el.scrollTop = el.scrollHeight;
 }
 
+// ── Serial ────────────────────────────────────────────────────────────────────
+
+let port = null, reader = null, writer = null;
+let lineBuf = '', lineQ = [];
+
 async function serialWrite(s) {
   log('> ' + s.trimEnd(), 'log-tx');
   await writer.write(new TextEncoder().encode(s));
 }
 
-function readLine() {
-  return new Promise(res => lineQ.push(res));
-}
+function readLine() { return new Promise(r => lineQ.push(r)); }
 
 async function readerLoop() {
   const dec = new TextDecoder();
   try {
     while (true) {
-      const { value, done } = await reader.read();
+      const {value, done} = await reader.read();
       if (done) break;
       lineBuf += dec.decode(value);
       let i;
@@ -530,8 +377,8 @@ async function readUntilOk() {
   const lines = [];
   for (;;) {
     const l = await readLine();
-    if (l === 'OK')   return { ok: true, lines };
-    if (l === 'FAIL') return { ok: false, lines };
+    if (l === 'OK')   return {ok: true,  lines};
+    if (l === 'FAIL') return {ok: false, lines};
     lines.push(l);
   }
 }
@@ -539,7 +386,7 @@ async function readUntilOk() {
 async function connect() {
   try {
     port = await navigator.serial.requestPort();
-    await port.open({ baudRate: 115200 });
+    await port.open({baudRate: 115200});
     reader = port.readable.getReader();
     writer = port.writable.getWriter();
     readerLoop();
@@ -569,19 +416,9 @@ async function disconnect() {
   log('Disconnected');
 }
 
-function setConnected(v) {
-  document.getElementById('sdot').className = 'dot' + (v ? ' on' : '');
-  document.getElementById('status-label').textContent = v ? 'Connected' : 'Disconnected';
-  document.getElementById('btn-connect').textContent = v ? 'Disconnect' : 'Connect';
-  document.getElementById('btn-load').disabled = !v;
-  document.getElementById('btn-save').disabled = !v;
-  if (!v) { port = null; reader = null; writer = null; }
-}
-
 // ── Base64 ────────────────────────────────────────────────────────────────────
 
 function iconToBase64(words) {
-  // words is Uint16Array (byte-swapped RGB565)
   const bytes = new Uint8Array(words.buffer, words.byteOffset, words.byteLength);
   let s = '';
   for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
@@ -595,10 +432,9 @@ function base64ToIcon(b64) {
   return new Uint16Array(bytes.buffer);
 }
 
-// Render a Uint16Array of byte-swapped RGB565 onto an app's canvas.
-function renderIconWords(appName, words) {
-  const canvas = document.getElementById('icon-canvas-' + appName.toLowerCase());
-  if (!canvas) return;
+// ── Icon canvas rendering ─────────────────────────────────────────────────────
+
+function renderIconOnCanvas(canvas, words) {
   const sz = ICON_SIZE;
   const img = canvas.getContext('2d').createImageData(sz, sz);
   for (let i = 0; i < sz * sz; i++) {
@@ -614,41 +450,86 @@ function renderIconWords(appName, words) {
   if (ph) ph.style.display = 'none';
 }
 
+// After renderEditors, sync each profile's canvas from iconData.
+function syncProfileIconCanvases() {
+  document.querySelectorAll('.profile-editor').forEach((ed, i) => {
+    const iconSel = document.getElementById(`p${i}_icon`);
+    const canvas  = document.getElementById(`picon-${i}`);
+    if (!iconSel || !canvas) return;
+    const appName = APP_NAMES[parseInt(iconSel.value)]?.toLowerCase();
+    if (appName && iconData[appName]) {
+      renderIconOnCanvas(canvas, iconData[appName]);
+    }
+  });
+}
+
+async function loadIconFile(profileIdx, file) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.getElementById(`picon-${profileIdx}`);
+      if (!canvas) { resolve(); return; }
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      const sz = Math.min(img.width, img.height);
+      ctx.clearRect(0, 0, ICON_SIZE, ICON_SIZE);
+      ctx.drawImage(img, (img.width-sz)/2, (img.height-sz)/2, sz, sz,
+                    0, 0, ICON_SIZE, ICON_SIZE);
+      URL.revokeObjectURL(img.src);
+
+      // Convert to byte-swapped RGB565
+      const pixels = ctx.getImageData(0, 0, ICON_SIZE, ICON_SIZE).data;
+      const words = new Uint16Array(ICON_SIZE * ICON_SIZE);
+      for (let i = 0, j = 0; i < pixels.length; i += 4, j++) {
+        const r = pixels[i]   >> 3, g = pixels[i+1] >> 2, b = pixels[i+2] >> 3;
+        const rgb = (r << 11) | (g << 5) | b;
+        words[j] = ((rgb & 0xFF) << 8) | (rgb >> 8);
+      }
+
+      // Store under the app name currently selected for this profile
+      const iconSel = document.getElementById(`p${profileIdx}_icon`);
+      const appName = APP_NAMES[parseInt(iconSel?.value ?? 0)]?.toLowerCase();
+      if (appName) iconData[appName] = words;
+
+      // Re-render so canvas shows the pixel-exact stored data
+      renderIconOnCanvas(canvas, words);
+      log(`Icon set for profile ${profileIdx} (${appName})`, 'log-ok');
+      resolve();
+    };
+    img.onerror = () => { log('Failed to load image', 'log-err'); resolve(); };
+    img.src = URL.createObjectURL(file);
+  });
+}
+
 // ── JSON ──────────────────────────────────────────────────────────────────────
 
 function parseAction(a) {
-  if (!a || a.t === 0) return { t:0, m:0, k:0, d:0, l:'---' };
-  if (a.t === 1) return { t:1, m:a.m??0, k:a.k??0, d:0, l:a.l??'' };
-  return { t:2, m:0, k:0, d:a.d??0, l:a.l??'' };
+  if (!a || a.t === 0) return {t:0, m:0, k:0, d:0, l:'---'};
+  if (a.t === 1) return {t:1, m:a.m??0, k:a.k??0, d:0, l:a.l??''};
+  return {t:2, m:0, k:0, d:a.d??0, l:a.l??''};
 }
-
 function actionToJson(a) {
-  if (a.t === 0) return { t:0 };
-  if (a.t === 1) return { t:1, m:a.m, k:a.k, l:a.l };
-  return { t:2, d:a.d, l:a.l };
+  if (a.t === 0) return {t:0};
+  if (a.t === 1) return {t:1, m:a.m, k:a.k, l:a.l};
+  return {t:2, d:a.d, l:a.l};
 }
 
 function parseJson(str) {
   const obj = JSON.parse(str);
   if (obj.v !== 1 || !Array.isArray(obj.profiles)) throw new Error('bad format');
-
-  // Restore any icons embedded in the JSON
+  // Restore icons into iconData (canvases don't exist yet; call syncProfileIconCanvases after render)
   if (obj.icons && typeof obj.icons === 'object') {
     for (const [name, b64] of Object.entries(obj.icons)) {
-      try {
-        const words = base64ToIcon(b64);
-        iconData[name] = words;
-        renderIconWords(name, words);
-      } catch {}
+      try { iconData[name] = base64ToIcon(b64); } catch {}
     }
   }
-
   return obj.profiles.map(p => ({
     icon: p.icon ?? 0, name: p.name ?? '', el: p.el ?? '',
     ew: parseAction(p.ew), eccw: parseAction(p.eccw),
-    x: parseAction(p.x), y: parseAction(p.y),
-    a: parseAction(p.a), b: parseAction(p.b),
-    c: parseAction(p.c), d: parseAction(p.d),
+    x: parseAction(p.x),   y: parseAction(p.y),
+    a: parseAction(p.a),   b: parseAction(p.b),
+    c: parseAction(p.c),   d: parseAction(p.d),
   }));
 }
 
@@ -663,7 +544,6 @@ function buildJson(profiles) {
       c: actionToJson(p.c),   d: actionToJson(p.d),
     })),
   };
-  // Embed uploaded icons as base64
   const icons = {};
   for (const [name, words] of Object.entries(iconData)) icons[name] = iconToBase64(words);
   if (Object.keys(icons).length) obj.icons = icons;
@@ -679,6 +559,8 @@ async function loadFromDevice() {
   try {
     const profiles = parseJson(r.lines.join(''));
     renderEditors(profiles);
+    syncProfileIconCanvases();
+    setProfilesLoaded(true);
     log('Loaded ' + profiles.length + ' profiles', 'log-ok');
   } catch (e) {
     log('Parse error: ' + e.message, 'log-err');
@@ -700,111 +582,18 @@ async function saveToDevice() {
   else log('SAVE failed: ' + fr.lines.join(' '), 'log-err');
 }
 
-// ── Icon Manager ──────────────────────────────────────────────────────────────
-
-// iconData[appName] = Uint16Array of RGB565 (32×32, byte-swapped)
-const iconData = {};
-let pendingIconSlot = null;
-
-const ICON_SIZE = 32;
-
-function initIconGrid() {
-  const grid = document.getElementById('icon-grid');
-  grid.innerHTML = '';
-  APP_NAMES.forEach(name => {
-    const slot = document.createElement('div');
-    slot.className = 'icon-slot';
-    slot.title = 'Click to upload icon for ' + name;
-
-    const wrap = document.createElement('div');
-    wrap.className = 'icon-wrap';
-
-    const canvas = document.createElement('canvas');
-    canvas.width = ICON_SIZE;
-    canvas.height = ICON_SIZE;
-    canvas.id = 'icon-canvas-' + name.toLowerCase();
-
-    const ph = document.createElement('div');
-    ph.className = 'ph';
-    ph.textContent = '+';
-
-    wrap.appendChild(canvas);
-    wrap.appendChild(ph);
-
-    const lbl = document.createElement('span');
-    lbl.textContent = name;
-
-    slot.appendChild(wrap);
-    slot.appendChild(lbl);
-    slot.addEventListener('click', () => {
-      pendingIconSlot = name;
-      document.getElementById('icon-file-input').value = '';
-      document.getElementById('icon-file-input').click();
-    });
-
-    grid.appendChild(slot);
-
-    // drag-drop
-    wrap.addEventListener('dragover', e => { e.preventDefault(); wrap.style.borderColor = 'var(--accent)'; });
-    wrap.addEventListener('dragleave', () => { wrap.style.borderColor = ''; });
-    wrap.addEventListener('drop', e => {
-      e.preventDefault();
-      wrap.style.borderColor = '';
-      const file = e.dataTransfer.files[0];
-      if (file) loadIconFile(name, file);
-    });
-  });
-}
-
-async function loadIconFile(appName, file) {
-  return new Promise(resolve => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.getElementById('icon-canvas-' + appName.toLowerCase());
-      const ctx = canvas.getContext('2d');
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
-
-      // Crop to square from center
-      const sz = Math.min(img.width, img.height);
-      const sx = (img.width  - sz) / 2;
-      const sy = (img.height - sz) / 2;
-      ctx.clearRect(0, 0, ICON_SIZE, ICON_SIZE);
-      ctx.drawImage(img, sx, sy, sz, sz, 0, 0, ICON_SIZE, ICON_SIZE);
-      URL.revokeObjectURL(img.src);
-
-      // Convert pixels to RGB565 (byte-swapped for RP2040 DMA)
-      const pixels = ctx.getImageData(0, 0, ICON_SIZE, ICON_SIZE).data;
-      const words = new Uint16Array(ICON_SIZE * ICON_SIZE);
-      for (let i = 0, j = 0; i < pixels.length; i += 4, j++) {
-        const r = pixels[i]   >> 3;
-        const g = pixels[i+1] >> 2;
-        const b = pixels[i+2] >> 3;
-        const rgb = (r << 11) | (g << 5) | b;
-        words[j] = ((rgb & 0xFF) << 8) | (rgb >> 8); // byte-swap
-      }
-      iconData[appName] = words;
-      // Re-render via shared helper so it matches the JSON restore path
-      renderIconWords(appName, words);
-      log(`Icon loaded: ${appName} (${ICON_SIZE}×${ICON_SIZE})`, 'log-ok');
-      resolve();
-    };
-    img.onerror = () => { log('Failed to load image', 'log-err'); resolve(); };
-    img.src = URL.createObjectURL(file);
-  });
-}
+// ── File I/O ──────────────────────────────────────────────────────────────────
 
 function downloadJson() {
   const profiles = collectProfiles();
   if (!profiles) return;
   const json = JSON.stringify(JSON.parse(buildJson(profiles)), null, 2);
-  const blob = new Blob([json], { type: 'application/json' });
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
+  a.href = URL.createObjectURL(new Blob([json], {type: 'application/json'}));
   a.download = 'commander-profiles.json';
   a.click();
   URL.revokeObjectURL(a.href);
-  log('Downloaded commander-profiles.json', 'log-ok');
+  log('Saved commander-profiles.json', 'log-ok');
 }
 
 function uploadJson(file) {
@@ -813,6 +602,8 @@ function uploadJson(file) {
     try {
       const profiles = parseJson(e.target.result);
       renderEditors(profiles);
+      syncProfileIconCanvases();
+      setProfilesLoaded(true);
       log('Loaded ' + profiles.length + ' profiles from file', 'log-ok');
     } catch (err) {
       log('JSON parse error: ' + err.message, 'log-err');
@@ -821,15 +612,14 @@ function uploadJson(file) {
   reader.readAsText(file);
 }
 
-// ── Profile editor rendering ──────────────────────────────────────────────────
+// ── UI rendering ──────────────────────────────────────────────────────────────
 
 function buildKeySelect(id, selectedCode) {
   const sel = document.createElement('select');
   sel.id = id;
   for (const [name, code] of HID_KEYS) {
     const o = document.createElement('option');
-    o.value = code;
-    o.textContent = name;
+    o.value = code; o.textContent = name;
     if (code === selectedCode) o.selected = true;
     sel.appendChild(o);
   }
@@ -840,19 +630,17 @@ function buildActionCard(pi, slot, action) {
   const card = document.createElement('div');
   card.className = 'acard';
 
-  // Header: slot name + summary
   const head = document.createElement('div');
   head.className = 'acard-head';
   const nameEl = document.createElement('span');
   nameEl.className = 'acard-name';
   nameEl.textContent = slot.name;
   nameEl.title = slot.desc;
-  const summaryEl = document.createElement('span');
-  summaryEl.className = 'acard-summary';
-  summaryEl.id = `p${pi}_${slot.key}_summary`;
-  summaryEl.textContent = actionSummary(action);
-  head.appendChild(nameEl);
-  head.appendChild(summaryEl);
+  const sumEl = document.createElement('span');
+  sumEl.className = 'acard-summary';
+  sumEl.id = `p${pi}_${slot.key}_sum`;
+  sumEl.textContent = actionSummary(action);
+  head.appendChild(nameEl); head.appendChild(sumEl);
   card.appendChild(head);
 
   // Type toggle
@@ -861,129 +649,87 @@ function buildActionCard(pi, slot, action) {
   for (const [label, val] of [['None',0],['Key',1],['Scroll',2]]) {
     const btn = document.createElement('div');
     btn.className = 'ttype' + (action.t === val ? ' on' : '');
-    btn.textContent = label;
-    btn.dataset.val = val;
+    btn.textContent = label; btn.dataset.val = val;
     btn.addEventListener('click', () => {
       typeRow.querySelectorAll('.ttype').forEach(b => b.classList.remove('on'));
       btn.classList.add('on');
       const t = parseInt(btn.dataset.val);
-      keyFieldsEl.classList.toggle('show', t === 1);
-      scrollFieldsEl.classList.toggle('show', t === 2);
-      updateSummary(pi, slot.key);
+      kf.classList.toggle('show', t === 1);
+      sf.classList.toggle('show', t === 2);
+      refreshSum(pi, slot.key);
     });
     typeRow.appendChild(btn);
   }
   card.appendChild(typeRow);
 
   // Key fields
-  const keyFieldsEl = document.createElement('div');
-  keyFieldsEl.className = 'key-fields' + (action.t === 1 ? ' show' : '');
-
-  // Modifier pills
+  const kf = document.createElement('div');
+  kf.className = 'key-fields' + (action.t === 1 ? ' show' : '');
   const modRow = document.createElement('div');
   modRow.className = 'mod-row';
   for (const m of MODS) {
     const pill = document.createElement('div');
     pill.className = 'mod-pill' + ((action.m & m.bit) ? ' on' : '');
-    pill.textContent = m.sym;
-    pill.title = m.tip;
+    pill.textContent = m.sym; pill.title = m.tip;
     pill.dataset.bit = m.bit;
     pill.id = `p${pi}_${slot.key}_mod_${m.bit}`;
-    pill.addEventListener('click', () => {
-      pill.classList.toggle('on');
-      updateSummary(pi, slot.key);
-    });
+    pill.addEventListener('click', () => { pill.classList.toggle('on'); refreshSum(pi, slot.key); });
     modRow.appendChild(pill);
   }
-  keyFieldsEl.appendChild(modRow);
-
-  // Key dropdown
+  kf.appendChild(modRow);
   const keyRow = document.createElement('div');
   keyRow.className = 'key-row';
   const keySel = buildKeySelect(`p${pi}_${slot.key}_key`, action.k ?? 0);
-  keySel.addEventListener('change', () => updateSummary(pi, slot.key));
+  keySel.addEventListener('change', () => refreshSum(pi, slot.key));
   keyRow.appendChild(keySel);
-  keyFieldsEl.appendChild(keyRow);
-  card.appendChild(keyFieldsEl);
+  kf.appendChild(keyRow);
+  card.appendChild(kf);
 
   // Scroll fields
-  const scrollFieldsEl = document.createElement('div');
-  scrollFieldsEl.className = 'scroll-fields' + (action.t === 2 ? ' show' : '');
+  const sf = document.createElement('div');
+  sf.className = 'scroll-fields' + (action.t === 2 ? ' show' : '');
+  const dr = document.createElement('div');
+  dr.className = 'delta-row';
+  const dl = document.createElement('label'); dl.textContent = 'Delta';
+  let dv = action.d ?? 0;
+  const dc = document.createElement('div'); dc.className = 'delta-ctrls';
+  const dd = document.createElement('span'); dd.className = 'delta-val'; dd.id = `p${pi}_${slot.key}_delta`; dd.textContent = dv;
+  const bm = document.createElement('button'); bm.className = 'sm'; bm.textContent = '−';
+  bm.addEventListener('click', () => { dv = Math.max(-127, dv-1); dd.textContent = dv; refreshSum(pi, slot.key); });
+  const bp = document.createElement('button'); bp.className = 'sm'; bp.textContent = '+';
+  bp.addEventListener('click', () => { dv = Math.min(127, dv+1); dd.textContent = dv; refreshSum(pi, slot.key); });
+  dc.appendChild(bm); dc.appendChild(dd); dc.appendChild(bp);
+  dr.appendChild(dl); dr.appendChild(dc); sf.appendChild(dr);
+  card.appendChild(sf);
 
-  const deltaRow = document.createElement('div');
-  deltaRow.className = 'delta-row';
-  const deltaLbl = document.createElement('label');
-  deltaLbl.textContent = 'Delta';
-  const deltaCtrls = document.createElement('div');
-  deltaCtrls.className = 'delta-ctrls';
-
-  let deltaVal = action.d ?? 0;
-  const deltaDisp = document.createElement('span');
-  deltaDisp.className = 'delta-val';
-  deltaDisp.id = `p${pi}_${slot.key}_delta`;
-  deltaDisp.textContent = deltaVal;
-
-  const btnMinus = document.createElement('button');
-  btnMinus.className = 'icon-btn sm';
-  btnMinus.textContent = '−';
-  btnMinus.addEventListener('click', () => {
-    deltaVal = Math.max(-127, deltaVal - 1);
-    deltaDisp.textContent = deltaVal;
-    updateSummary(pi, slot.key);
-  });
-  const btnPlus = document.createElement('button');
-  btnPlus.className = 'icon-btn sm';
-  btnPlus.textContent = '+';
-  btnPlus.addEventListener('click', () => {
-    deltaVal = Math.min(127, deltaVal + 1);
-    deltaDisp.textContent = deltaVal;
-    updateSummary(pi, slot.key);
-  });
-
-  deltaCtrls.appendChild(btnMinus);
-  deltaCtrls.appendChild(deltaDisp);
-  deltaCtrls.appendChild(btnPlus);
-  deltaRow.appendChild(deltaLbl);
-  deltaRow.appendChild(deltaCtrls);
-  scrollFieldsEl.appendChild(deltaRow);
-  card.appendChild(scrollFieldsEl);
-
-  // LCD Label
-  const lblRow = document.createElement('div');
-  lblRow.className = 'lbl-row';
-  const lblLabel = document.createElement('label');
-  lblLabel.textContent = 'LCD';
-  const lblInput = document.createElement('input');
-  lblInput.type = 'text';
-  lblInput.id = `p${pi}_${slot.key}_label`;
-  lblInput.maxLength = 8;
-  lblInput.value = (action.l && action.l !== '---') ? action.l : '';
-  lblInput.placeholder = '(8 chars max)';
-  lblInput.style.fontSize = '11px';
-  lblRow.appendChild(lblLabel);
-  lblRow.appendChild(lblInput);
-  card.appendChild(lblRow);
+  // LCD label
+  const lr = document.createElement('div'); lr.className = 'lbl-row';
+  const ll = document.createElement('label'); ll.textContent = 'LCD';
+  const li = document.createElement('input'); li.type = 'text';
+  li.id = `p${pi}_${slot.key}_label`; li.maxLength = 8;
+  li.value = (action.l && action.l !== '---') ? action.l : '';
+  li.placeholder = '8 chars max';
+  lr.appendChild(ll); lr.appendChild(li);
+  card.appendChild(lr);
 
   return card;
 }
 
-function updateSummary(pi, slotKey) {
-  const a = collectAction(pi, slotKey);
-  const el = document.getElementById(`p${pi}_${slotKey}_summary`);
-  if (el) el.textContent = actionSummary(a);
+function refreshSum(pi, slotKey) {
+  const el = document.getElementById(`p${pi}_${slotKey}_sum`);
+  if (el) el.textContent = actionSummary(collectAction(pi, slotKey));
 }
 
 function renderEditors(profiles) {
-  const tabsEl    = document.getElementById('tabs');
-  const editorsEl = document.getElementById('editors');
-  tabsEl.innerHTML = '';
-  editorsEl.innerHTML = '';
+  const tabsEl = document.getElementById('tabs');
+  const edsEl  = document.getElementById('editors');
+  tabsEl.innerHTML = ''; edsEl.innerHTML = '';
 
   profiles.forEach((p, i) => {
     // Tab
     const tab = document.createElement('div');
     tab.className = 'tab' + (i === 0 ? ' active' : '');
-    tab.textContent = (i + 1) + '. ' + p.name;
+    tab.textContent = p.name || `Profile ${i+1}`;
     tab.addEventListener('click', () => {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.profile-editor').forEach(e => e.classList.remove('active'));
@@ -992,35 +738,73 @@ function renderEditors(profiles) {
     });
     tabsEl.appendChild(tab);
 
-    // Editor
     const ed = document.createElement('div');
     ed.className = 'profile-editor' + (i === 0 ? ' active' : '');
     ed.id = `ed-${i}`;
 
-    // Meta row
+    // ── Meta row ─────────────────────────────────────────────────────────────
     const meta = document.createElement('div');
     meta.className = 'profile-meta';
 
-    function field(labelText, el) {
-      const g = document.createElement('div');
-      g.className = 'field';
-      const lbl = document.createElement('label');
-      lbl.textContent = labelText;
-      g.appendChild(lbl);
-      g.appendChild(el);
-      return g;
+    // Icon upload area (left)
+    const iconArea = document.createElement('div');
+    iconArea.className = 'icon-upload-area';
+
+    const iconWrap = document.createElement('div');
+    iconWrap.className = 'icon-wrap';
+    iconWrap.title = 'Click to upload icon image';
+    const canvas = document.createElement('canvas');
+    canvas.width = ICON_SIZE; canvas.height = ICON_SIZE;
+    canvas.id = `picon-${i}`;
+    const ph = document.createElement('div');
+    ph.className = 'ph'; ph.textContent = '＋';
+    iconWrap.appendChild(canvas); iconWrap.appendChild(ph);
+    iconWrap.addEventListener('click', () => {
+      pendingIconProfile = i;
+      document.getElementById('icon-file-input').value = '';
+      document.getElementById('icon-file-input').click();
+    });
+    // Drag-drop
+    iconWrap.addEventListener('dragover', e => { e.preventDefault(); iconWrap.style.borderColor = 'var(--accent)'; });
+    iconWrap.addEventListener('dragleave', () => { iconWrap.style.borderColor = ''; });
+    iconWrap.addEventListener('drop', async e => {
+      e.preventDefault(); iconWrap.style.borderColor = '';
+      const file = e.dataTransfer.files[0];
+      if (file) { pendingIconProfile = i; await loadIconFile(i, file); }
+    });
+
+    const uploadBtn = document.createElement('button');
+    uploadBtn.className = 'sm'; uploadBtn.textContent = 'Upload';
+    uploadBtn.addEventListener('click', () => {
+      pendingIconProfile = i;
+      document.getElementById('icon-file-input').value = '';
+      document.getElementById('icon-file-input').click();
+    });
+
+    iconArea.appendChild(iconWrap);
+    iconArea.appendChild(uploadBtn);
+    meta.appendChild(iconArea);
+
+    // Fields (right)
+    const fields = document.createElement('div');
+    fields.className = 'meta-fields';
+
+    function fieldRow(labelText, el) {
+      const row = document.createElement('div');
+      row.className = 'field';
+      const lbl = document.createElement('label'); lbl.textContent = labelText;
+      row.appendChild(lbl); row.appendChild(el);
+      return row;
     }
 
     const nameIn = document.createElement('input');
     nameIn.type = 'text'; nameIn.id = `p${i}_name`;
-    nameIn.maxLength = 15; nameIn.value = p.name;
-    nameIn.style.width = '140px';
-    nameIn.addEventListener('input', () => { tab.textContent = (i+1) + '. ' + nameIn.value; });
+    nameIn.maxLength = 15; nameIn.value = p.name; nameIn.style.width = '140px';
+    nameIn.addEventListener('input', () => { tab.textContent = nameIn.value || `Profile ${i+1}`; });
 
     const elIn = document.createElement('input');
     elIn.type = 'text'; elIn.id = `p${i}_el`;
-    elIn.maxLength = 8; elIn.value = p.el;
-    elIn.style.width = '90px';
+    elIn.maxLength = 8; elIn.value = p.el; elIn.style.width = '100px';
 
     const iconSel = document.createElement('select');
     iconSel.id = `p${i}_icon`;
@@ -1030,85 +814,77 @@ function renderEditors(profiles) {
       if (ai === p.icon) o.selected = true;
       iconSel.appendChild(o);
     });
+    // When icon type changes, update canvas preview
+    iconSel.addEventListener('change', () => {
+      const appName = APP_NAMES[parseInt(iconSel.value)]?.toLowerCase();
+      const cvs = document.getElementById(`picon-${i}`);
+      if (cvs) {
+        if (appName && iconData[appName]) {
+          renderIconOnCanvas(cvs, iconData[appName]);
+        } else {
+          cvs.getContext('2d').clearRect(0, 0, cvs.width, cvs.height);
+          const phEl = cvs.parentElement?.querySelector('.ph');
+          if (phEl) phEl.style.display = '';
+        }
+      }
+    });
 
-    meta.appendChild(field('Name', nameIn));
-    meta.appendChild(field('ENC2 Label', elIn));
-    meta.appendChild(field('Icon', iconSel));
+    fields.appendChild(fieldRow('Name', nameIn));
+    fields.appendChild(fieldRow('ENC2', elIn));
+    fields.appendChild(fieldRow('Icon', iconSel));
+    meta.appendChild(fields);
     ed.appendChild(meta);
 
-    // ENC2 section
-    const enc2Sec = document.createElement('div');
-    enc2Sec.className = 'ctrl-sec';
-    const enc2Title = document.createElement('div');
-    enc2Title.className = 'ctrl-sec-title';
-    enc2Title.textContent = 'Encoder (ENC2)';
-    enc2Sec.appendChild(enc2Title);
-    const enc2Row = document.createElement('div');
-    enc2Row.className = 'ctrl-row';
-    const ewSlot  = ACTION_SLOTS.find(s => s.key === 'ew');
-    const eccwSlot = ACTION_SLOTS.find(s => s.key === 'eccw');
-    enc2Row.appendChild(buildActionCard(i, ewSlot,  p.ew));
-    enc2Row.appendChild(buildActionCard(i, eccwSlot, p.eccw));
-    enc2Sec.appendChild(enc2Row);
-    ed.appendChild(enc2Sec);
+    // ── Encoder section ───────────────────────────────────────────────────────
+    const encSec = document.createElement('div'); encSec.className = 'ctrl-sec';
+    const encTitle = document.createElement('div'); encTitle.className = 'ctrl-sec-title'; encTitle.textContent = 'Encoder (ENC2)';
+    const encRow = document.createElement('div'); encRow.className = 'ctrl-row';
+    encRow.appendChild(buildActionCard(i, ACTION_SLOTS.find(s=>s.key==='ew'),   p.ew));
+    encRow.appendChild(buildActionCard(i, ACTION_SLOTS.find(s=>s.key==='eccw'), p.eccw));
+    encSec.appendChild(encTitle); encSec.appendChild(encRow);
+    ed.appendChild(encSec);
 
-    // X / Y section
-    const xySec = document.createElement('div');
-    xySec.className = 'ctrl-sec';
-    const xyTitle = document.createElement('div');
-    xyTitle.className = 'ctrl-sec-title';
-    xyTitle.textContent = 'Side Buttons';
-    xySec.appendChild(xyTitle);
-    const xyRow = document.createElement('div');
-    xyRow.className = 'ctrl-row';
+    // ── Side buttons ──────────────────────────────────────────────────────────
+    const xySec = document.createElement('div'); xySec.className = 'ctrl-sec';
+    const xyTitle = document.createElement('div'); xyTitle.className = 'ctrl-sec-title'; xyTitle.textContent = 'Side Buttons';
+    const xyRow = document.createElement('div'); xyRow.className = 'ctrl-row';
     xyRow.appendChild(buildActionCard(i, ACTION_SLOTS.find(s=>s.key==='x'), p.x));
     xyRow.appendChild(buildActionCard(i, ACTION_SLOTS.find(s=>s.key==='y'), p.y));
-    xySec.appendChild(xyRow);
+    xySec.appendChild(xyTitle); xySec.appendChild(xyRow);
     ed.appendChild(xySec);
 
-    // A / B / C / D section
-    const abcdSec = document.createElement('div');
-    abcdSec.className = 'ctrl-sec';
-    const abcdTitle = document.createElement('div');
-    abcdTitle.className = 'ctrl-sec-title';
-    abcdTitle.textContent = 'Main Buttons';
-    abcdSec.appendChild(abcdTitle);
-    const abcdRow = document.createElement('div');
-    abcdRow.className = 'ctrl-row';
-    for (const k of ['a','b','c','d']) {
+    // ── Main buttons ──────────────────────────────────────────────────────────
+    const abcdSec = document.createElement('div'); abcdSec.className = 'ctrl-sec';
+    const abcdTitle = document.createElement('div'); abcdTitle.className = 'ctrl-sec-title'; abcdTitle.textContent = 'Main Buttons';
+    const abcdRow = document.createElement('div'); abcdRow.className = 'ctrl-row';
+    for (const k of ['a','b','c','d'])
       abcdRow.appendChild(buildActionCard(i, ACTION_SLOTS.find(s=>s.key===k), p[k]));
-    }
-    abcdSec.appendChild(abcdRow);
+    abcdSec.appendChild(abcdTitle); abcdSec.appendChild(abcdRow);
     ed.appendChild(abcdSec);
 
-    editorsEl.appendChild(ed);
+    edsEl.appendChild(ed);
   });
 }
 
 // ── Collect ───────────────────────────────────────────────────────────────────
 
 function collectAction(pi, slotKey) {
-  const typeBtn = document.querySelector(`#ed-${pi} .acard [data-val].on`);
-  // find type for this specific slot
-  const card = document.getElementById(`p${pi}_${slotKey}_summary`)?.closest('.acard');
-  if (!card) return { t:0, m:0, k:0, d:0, l:'---' };
-
+  const card = document.getElementById(`p${pi}_${slotKey}_sum`)?.closest('.acard');
+  if (!card) return {t:0, m:0, k:0, d:0, l:'---'};
   const tBtn = card.querySelector('.ttype.on');
   const t = tBtn ? parseInt(tBtn.dataset.val) : 0;
-  const lbl = (document.getElementById(`p${pi}_${slotKey}_label`)?.value.trim()) || '---';
-
-  if (t === 0) return { t:0, m:0, k:0, d:0, l:'---' };
+  const lbl = document.getElementById(`p${pi}_${slotKey}_label`)?.value.trim() || '---';
+  if (t === 0) return {t:0, m:0, k:0, d:0, l:'---'};
   if (t === 1) {
     let mod = 0;
     for (const m of MODS) {
-      const pill = document.getElementById(`p${pi}_${slotKey}_mod_${m.bit}`);
-      if (pill?.classList.contains('on')) mod |= m.bit;
+      if (document.getElementById(`p${pi}_${slotKey}_mod_${m.bit}`)?.classList.contains('on')) mod |= m.bit;
     }
     const k = parseInt(document.getElementById(`p${pi}_${slotKey}_key`)?.value ?? 0);
-    return { t:1, m:mod, k, d:0, l:lbl };
+    return {t:1, m:mod, k, d:0, l:lbl};
   }
   const d = parseInt(document.getElementById(`p${pi}_${slotKey}_delta`)?.textContent ?? 0);
-  return { t:2, m:0, k:0, d, l:lbl };
+  return {t:2, m:0, k:0, d, l:lbl};
 }
 
 function collectProfiles() {
@@ -1127,11 +903,7 @@ function collectProfiles() {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 
-initIconGrid();
-
-document.getElementById('btn-connect').addEventListener('click', () => {
-  if (port) disconnect(); else connect();
-});
+document.getElementById('btn-connect').addEventListener('click', () => { if (connected) disconnect(); else connect(); });
 document.getElementById('btn-load').addEventListener('click', loadFromDevice);
 document.getElementById('btn-save').addEventListener('click', saveToDevice);
 document.getElementById('btn-dl-json').addEventListener('click', downloadJson);
@@ -1139,15 +911,14 @@ document.getElementById('btn-ul-json').addEventListener('click', () => {
   document.getElementById('json-file-input').value = '';
   document.getElementById('json-file-input').click();
 });
+document.getElementById('btn-clear-log').addEventListener('click', () => { document.getElementById('log').innerHTML = ''; });
 document.getElementById('json-file-input').addEventListener('change', e => {
-  const file = e.target.files[0];
-  if (file) uploadJson(file);
+  const file = e.target.files[0]; if (file) uploadJson(file);
 });
-
 document.getElementById('icon-file-input').addEventListener('change', async e => {
   const file = e.target.files[0];
-  if (file && pendingIconSlot) await loadIconFile(pendingIconSlot, file);
-  pendingIconSlot = null;
+  if (file && pendingIconProfile !== null) await loadIconFile(pendingIconProfile, file);
+  pendingIconProfile = null;
 });
 
 if (!navigator.serial) {
