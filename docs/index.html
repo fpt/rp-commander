@@ -5,167 +5,421 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RP Commander Config</title>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --bg: #1a1a1e;
-    --bg2: #25252b;
-    --bg3: #2e2e36;
-    --border: #3a3a44;
-    --accent: #5b8aff;
-    --accent2: #7c5cfc;
-    --text: #e0e0e8;
-    --text2: #888898;
-    --ok: #4caf80;
-    --err: #f06060;
-    --warn: #f0a040;
-    --font: 'Menlo', 'Consolas', 'Monaco', monospace;
-  }
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font);
-    font-size: 13px;
-    line-height: 1.5;
-    min-height: 100vh;
-  }
-  header {
-    background: var(--bg2);
-    border-bottom: 1px solid var(--border);
-    padding: 14px 20px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-  header h1 { font-size: 16px; font-weight: 600; letter-spacing: 0.04em; flex: 1; }
-  .notice {
-    background: #2a2820;
-    border: 1px solid #5a4a20;
-    color: var(--warn);
-    padding: 8px 14px;
-    margin: 12px 20px 0;
-    border-radius: 4px;
-    font-size: 12px;
-  }
-  #main { padding: 14px 20px; }
-  .controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
-  button {
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: var(--font);
-    font-size: 12px;
-    padding: 6px 14px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: border-color 0.15s, background 0.15s;
-  }
-  button:hover { border-color: var(--accent); background: var(--bg2); }
-  button:disabled { opacity: 0.4; cursor: not-allowed; }
-  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-  button.primary:hover { background: #4a79ee; }
-  button.success { background: var(--ok); border-color: var(--ok); color: #fff; }
-  #status-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: var(--err); flex-shrink: 0;
-    transition: background 0.3s;
-  }
-  #status-dot.connected { background: var(--ok); }
-  #status-label { font-size: 12px; color: var(--text2); }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:     #15151a;
+  --bg2:    #1e1e25;
+  --bg3:    #26262f;
+  --bg4:    #2d2d38;
+  --border: #363640;
+  --accent: #5b8aff;
+  --accent2:#8055ff;
+  --text:   #dddde8;
+  --text2:  #888898;
+  --text3:  #50505c;
+  --ok:     #4caf80;
+  --err:    #f06060;
+  --warn:   #f0a040;
+  --font:   'Menlo','Consolas','Monaco',monospace;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 13px;
+  line-height: 1.4;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
 
-  /* Tabs */
-  .tabs { display: flex; gap: 2px; flex-wrap: wrap; margin-bottom: 12px; border-bottom: 1px solid var(--border); }
-  .tab {
-    padding: 6px 14px; cursor: pointer; border-radius: 4px 4px 0 0;
-    background: var(--bg2); border: 1px solid transparent;
-    border-bottom: none; font-size: 12px; color: var(--text2);
-    margin-bottom: -1px; transition: color 0.15s;
-  }
-  .tab:hover { color: var(--text); }
-  .tab.active { background: var(--bg3); border-color: var(--border); color: var(--accent); }
+/* ── Header ──────────────────────────────────────────────────────────────── */
+header {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 9px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+header h1 { font-size: 14px; font-weight: 700; letter-spacing: 0.06em; flex: 1; }
+.dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--err); flex-shrink: 0;
+  transition: background 0.3s;
+}
+.dot.on { background: var(--ok); }
+#status-label { font-size: 11px; color: var(--text2); }
 
-  /* Profile editor */
-  .profile-editor { display: none; }
-  .profile-editor.active { display: block; }
-  .profile-meta { display: flex; gap: 12px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
-  .field-group { display: flex; flex-direction: column; gap: 3px; }
-  .field-group label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; }
-  input[type=text], input[type=number], select {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: var(--font);
-    font-size: 12px;
-    padding: 5px 8px;
-    border-radius: 3px;
-    outline: none;
-    transition: border-color 0.15s;
-  }
-  input[type=text]:focus, input[type=number]:focus, select:focus { border-color: var(--accent); }
-  input[type=text].narrow { width: 110px; }
-  input[type=text].wider { width: 160px; }
-  input[type=number].tiny { width: 70px; }
-  select { padding-right: 4px; }
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
+button {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 11px;
+  padding: 5px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s, background 0.15s;
+}
+button:hover:not(:disabled) { border-color: var(--accent); background: var(--bg4); }
+button:disabled { opacity: 0.35; cursor: not-allowed; }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+button.primary:hover:not(:disabled) { background: #4a78ee; border-color: #4a78ee; }
+button.sm { padding: 3px 8px; font-size: 10px; }
+button.icon-btn { padding: 3px 7px; font-size: 13px; line-height: 1; }
 
-  .actions-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 10px;
-  }
-  .action-card {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: 5px;
-    padding: 10px 12px;
-  }
-  .action-card h3 { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
-  .action-fields { display: flex; flex-direction: column; gap: 6px; }
-  .action-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .mod-checks { display: flex; gap: 8px; flex-wrap: wrap; }
-  .mod-check { display: flex; align-items: center; gap: 3px; font-size: 12px; cursor: pointer; }
-  .mod-check input { margin: 0; cursor: pointer; }
+/* ── Inputs / selects ────────────────────────────────────────────────────── */
+input[type=text], input[type=number], select {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 12px;
+  padding: 4px 7px;
+  border-radius: 3px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+input:focus, select:focus { border-color: var(--accent); }
+input[type=file] { display: none; }
 
-  /* Log */
-  #log {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 8px 10px;
-    height: 120px;
-    overflow-y: auto;
-    font-size: 11px;
-    color: var(--text2);
-    margin-top: 14px;
-    white-space: pre-wrap;
-    word-break: break-all;
-  }
-  .log-ok  { color: var(--ok); }
-  .log-err { color: var(--err); }
-  .log-tx  { color: var(--accent); }
-  .log-rx  { color: var(--text); }
+/* ── Layout ──────────────────────────────────────────────────────────────── */
+#layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────────────────── */
+#sidebar {
+  width: 248px;
+  flex-shrink: 0;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.sb-sec {
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.sb-sec h2 {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text2);
+  margin-bottom: 9px;
+}
+
+/* ── Icon grid ───────────────────────────────────────────────────────────── */
+#icon-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 5px;
+  margin-bottom: 9px;
+}
+.icon-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+}
+.icon-wrap {
+  position: relative;
+  width: 38px; height: 38px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  background: #000;
+  transition: border-color 0.15s;
+}
+.icon-slot:hover .icon-wrap { border-color: var(--accent); }
+.icon-wrap canvas {
+  width: 38px; height: 38px;
+  display: block;
+  image-rendering: pixelated;
+}
+.icon-wrap .ph {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: var(--text3);
+  pointer-events: none;
+}
+.icon-slot > span {
+  font-size: 8px; color: var(--text2);
+  text-align: center;
+}
+
+/* ── Log ─────────────────────────────────────────────────────────────────── */
+#log-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 9px 12px 10px;
+  min-height: 0;
+}
+#log-wrap h2 {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text2);
+  margin-bottom: 6px;
+  flex-shrink: 0;
+}
+#log {
+  flex: 1;
+  overflow-y: auto;
+  font-size: 10px;
+  color: var(--text2);
+  white-space: pre-wrap;
+  word-break: break-all;
+  min-height: 0;
+}
+.log-ok  { color: var(--ok); }
+.log-err { color: var(--err); }
+.log-tx  { color: var(--accent); }
+
+/* ── Main content ────────────────────────────────────────────────────────── */
+#content { flex: 1; overflow-y: auto; padding: 12px 16px; min-width: 0; }
+
+/* ── Tabs ────────────────────────────────────────────────────────────────── */
+.tabs {
+  display: flex;
+  gap: 2px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+.tab {
+  padding: 5px 13px;
+  cursor: pointer;
+  border-radius: 4px 4px 0 0;
+  background: var(--bg2);
+  border: 1px solid transparent;
+  border-bottom: none;
+  font-size: 11px;
+  color: var(--text2);
+  margin-bottom: -1px;
+  transition: color 0.15s;
+}
+.tab:hover { color: var(--text); }
+.tab.active { background: var(--bg3); border-color: var(--border); color: var(--accent); font-weight: 600; }
+
+/* ── Profile editor ──────────────────────────────────────────────────────── */
+.profile-editor { display: none; }
+.profile-editor.active { display: block; }
+
+.profile-meta {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 14px;
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  margin-bottom: 10px;
+}
+.field { display: flex; flex-direction: column; gap: 3px; }
+.field label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text2); }
+
+/* ── Control sections ────────────────────────────────────────────────────── */
+.ctrl-sec {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 9px 12px;
+  margin-bottom: 8px;
+}
+.ctrl-sec-title {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text2);
+  margin-bottom: 7px;
+}
+.ctrl-row {
+  display: flex;
+  gap: 7px;
+}
+.ctrl-row > * { flex: 1; min-width: 0; }
+
+/* ── Action card ─────────────────────────────────────────────────────────── */
+.acard {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 8px 9px;
+  transition: border-color 0.15s;
+}
+.acard:focus-within { border-color: #5b8aff88; }
+
+.acard-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+}
+.acard-name {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text2);
+}
+.acard-summary {
+  font-size: 13px;
+  color: var(--accent);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  max-width: 60%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Type toggle */
+.type-row {
+  display: flex;
+  gap: 3px;
+  margin-bottom: 6px;
+}
+.ttype {
+  flex: 1;
+  text-align: center;
+  padding: 3px 4px;
+  font-size: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  color: var(--text2);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.12s;
+  user-select: none;
+}
+.ttype.on {
+  background: var(--bg4);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* Modifier pills */
+.mod-row {
+  display: flex;
+  gap: 3px;
+  margin-bottom: 5px;
+  flex-wrap: wrap;
+}
+.mod-pill {
+  padding: 2px 8px;
+  font-size: 13px;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  color: var(--text2);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.12s;
+  user-select: none;
+  line-height: 1.4;
+}
+.mod-pill.on {
+  background: var(--accent2);
+  border-color: var(--accent2);
+  color: #fff;
+}
+
+/* Key select */
+.key-row { margin-bottom: 5px; }
+.key-row select { width: 100%; font-size: 11px; }
+
+/* Scroll delta */
+.delta-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 5px;
+}
+.delta-row label { font-size: 10px; color: var(--text2); white-space: nowrap; }
+.delta-ctrls { display: flex; align-items: center; gap: 4px; }
+.delta-ctrls button { width: 22px; height: 22px; padding: 0; font-size: 14px; flex-shrink: 0; }
+.delta-val { min-width: 28px; text-align: center; font-size: 12px; font-weight: 600; }
+
+/* LCD label */
+.lbl-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.lbl-row label { font-size: 10px; color: var(--text2); white-space: nowrap; }
+.lbl-row input { flex: 1; min-width: 0; font-size: 11px; }
+.lbl-preview {
+  font-size: 10px;
+  color: var(--text3);
+  white-space: nowrap;
+}
+
+/* Key fields / scroll fields hidden states */
+.key-fields, .scroll-fields { display: none; }
+.key-fields.show, .scroll-fields.show { display: block; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 3px; }
 </style>
 </head>
 <body>
+
 <header>
-  <h1>RP Commander Config</h1>
-  <span id="status-dot"></span>
+  <h1>RP Commander</h1>
+  <span class="dot" id="sdot"></span>
   <span id="status-label">Disconnected</span>
   <button id="btn-connect">Connect</button>
+  <button id="btn-load" disabled>↓ Load</button>
+  <button id="btn-save" class="primary" disabled>↑ Save to Device</button>
 </header>
-<div class="notice">
-  Requires Chrome or Edge with WebSerial enabled. Connect the device via USB.
-</div>
-<div id="main">
-  <div class="controls">
-    <button id="btn-load" disabled>Upload from Device</button>
-    <button id="btn-save" class="primary" disabled>Save Changes to Device</button>
-  </div>
-  <div id="tabs" class="tabs"></div>
-  <div id="editors"></div>
-  <div id="log"></div>
+
+<div id="layout">
+  <aside id="sidebar">
+
+    <div class="sb-sec">
+      <h2>App Icons</h2>
+      <div id="icon-grid"></div>
+      <button id="btn-dl-icons" style="width:100%" class="sm">↓ Download icons_data.h</button>
+    </div>
+
+    <div id="log-wrap">
+      <h2>Log</h2>
+      <div id="log"></div>
+    </div>
+
+  </aside>
+
+  <main id="content">
+    <div id="tabs" class="tabs"></div>
+    <div id="editors"></div>
+  </main>
 </div>
 
+<!-- hidden file input for icon uploads -->
+<input type="file" id="icon-file-input" accept="image/*">
+
 <script>
-// ── HID keycodes ──────────────────────────────────────────────────────────────
+'use strict';
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+
 const HID_KEYS = [
   ['---',0],
   ['A',4],['B',5],['C',6],['D',7],['E',8],['F',9],['G',10],['H',11],
@@ -173,152 +427,148 @@ const HID_KEYS = [
   ['Q',20],['R',21],['S',22],['T',23],['U',24],['V',25],['W',26],['X',27],
   ['Y',28],['Z',29],
   ['1',30],['2',31],['3',32],['4',33],['5',34],['6',35],['7',36],['8',37],['9',38],['0',39],
-  ['Enter',40],['Escape',41],['Backspace',42],['Tab',43],['Space',44],
+  ['Enter',40],['Esc',41],['Backspace',42],['Tab',43],['Space',44],
   ['Minus',45],['Equal',46],['[',47],[']',48],['\\',49],
   [';',51],["'",52],['`',53],[',',54],['.',55],['/',56],
   ['F1',58],['F2',59],['F3',60],['F4',61],['F5',62],['F6',63],
   ['F7',64],['F8',65],['F9',66],['F10',67],['F11',68],['F12',69],
-  ['PrintScr',70],['ScrollLock',71],['Pause',72],['Insert',73],
-  ['Home',74],['PageUp',75],['Delete',76],['End',77],['PageDown',78],
-  ['ArrowRight',79],['ArrowLeft',80],['ArrowDown',81],['ArrowUp',82],
+  ['Insert',73],['Home',74],['PageUp',75],['Delete',76],['End',77],['PageDown',78],
+  ['→',79],['←',80],['↓',81],['↑',82],
 ];
-const MOD_CTRL  = 0x01;
-const MOD_SHIFT = 0x02;
-const MOD_ALT   = 0x04;
-const MOD_GUI   = 0x08;
 
-// ── JSON helpers ──────────────────────────────────────────────────────────────
-function actionToJson(a) {
-  if (a.t === 0) return {t:0};
-  if (a.t === 1) return {t:1, m:a.m, k:a.k, l:a.l};
-  return {t:2, d:a.d, l:a.l};
+const KEY_SYM = { 40:'↩', 41:'⎋', 42:'⌫', 43:'⇥', 44:'⎵',
+  74:'↖', 75:'⇞', 76:'⌦', 77:'↘', 78:'⇟',
+  79:'→', 80:'←', 81:'↓', 82:'↑' };
+
+const MOD_CTRL=0x01, MOD_SHIFT=0x02, MOD_ALT=0x04, MOD_GUI=0x08;
+const MODS = [
+  { bit: MOD_CTRL,  sym: '⌃', tip: 'Ctrl'  },
+  { bit: MOD_SHIFT, sym: '⇧', tip: 'Shift' },
+  { bit: MOD_ALT,   sym: '⌥', tip: 'Alt'   },
+  { bit: MOD_GUI,   sym: '⌘', tip: 'Cmd'   },
+];
+
+const APP_NAMES = ['Chrome','Claude','Fusion','KiCad','Krita'];
+
+const ACTION_SLOTS = [
+  { key:'ew',   name:'ENC2 →', desc:'Encoder clockwise'         },
+  { key:'eccw', name:'ENC2 ←', desc:'Encoder counter-clockwise' },
+  { key:'x',    name:'X',      desc:'Left side button'          },
+  { key:'y',    name:'Y',      desc:'Right side button'         },
+  { key:'a',    name:'A',      desc:'Button A'                  },
+  { key:'b',    name:'B',      desc:'Button B'                  },
+  { key:'c',    name:'C',      desc:'Button C'                  },
+  { key:'d',    name:'D',      desc:'Button D'                  },
+];
+
+// ── Utilities ─────────────────────────────────────────────────────────────────
+
+function keyLabel(code) {
+  if (KEY_SYM[code]) return KEY_SYM[code];
+  const e = HID_KEYS.find(([,c]) => c === code);
+  return e ? e[0] : '?';
 }
 
-function buildJson(profiles) {
-  return JSON.stringify({v:1, profiles: profiles.map(p => ({
-    app: p.app,
-    name: p.name,
-    el: p.el,
-    ew: actionToJson(p.ew),
-    eccw: actionToJson(p.eccw),
-    x: actionToJson(p.x),
-    y: actionToJson(p.y),
-    a: actionToJson(p.a),
-    b: actionToJson(p.b),
-    c: actionToJson(p.c),
-    d: actionToJson(p.d),
-  }))});
+function modStr(mod) {
+  return MODS.filter(m => mod & m.bit).map(m => m.sym).join('');
 }
 
-function parseJson(str) {
-  const obj = JSON.parse(str);
-  if (obj.v !== 1 || !Array.isArray(obj.profiles)) throw new Error('bad format');
-  return obj.profiles.map(p => ({
-    app: p.app ?? 0,
-    name: p.name ?? '',
-    el: p.el ?? '',
-    ew:   parseAction(p.ew),
-    eccw: parseAction(p.eccw),
-    x: parseAction(p.x),
-    y: parseAction(p.y),
-    a: parseAction(p.a),
-    b: parseAction(p.b),
-    c: parseAction(p.c),
-    d: parseAction(p.d),
-  }));
-}
-
-function parseAction(a) {
-  if (!a || a.t === 0) return {t:0, m:0, k:0, d:0, l:'---'};
-  if (a.t === 1) return {t:1, m:a.m??0, k:a.k??0, d:0, l:a.l??''};
-  return {t:2, m:0, k:0, d:a.d??0, l:a.l??''};
+function actionSummary(a) {
+  if (!a || a.t === 0) return '—';
+  if (a.t === 1) {
+    const s = modStr(a.m) + keyLabel(a.k);
+    return s || '?';
+  }
+  if (a.t === 2) return a.d >= 0 ? `↑×${a.d}` : `↓×${Math.abs(a.d)}`;
+  return '—';
 }
 
 // ── Serial ────────────────────────────────────────────────────────────────────
-let port = null;
-let reader = null;
-let writer = null;
-let lineBuffer = '';
-let lineResolvers = [];
+
+let port = null, reader = null, writer = null;
+let lineBuf = '', lineQ = [];
 
 function log(msg, cls='') {
   const el = document.getElementById('log');
-  const line = document.createElement('span');
-  if (cls) line.className = cls;
-  line.textContent = msg + '\n';
-  el.appendChild(line);
+  const sp = document.createElement('span');
+  if (cls) sp.className = cls;
+  sp.textContent = msg + '\n';
+  el.appendChild(sp);
   el.scrollTop = el.scrollHeight;
 }
 
-async function writeLine(s) {
-  log('> ' + s.replace(/\n/g,'↵'), 'log-tx');
-  const enc = new TextEncoder();
-  await writer.write(enc.encode(s));
+async function serialWrite(s) {
+  log('> ' + s.trimEnd(), 'log-tx');
+  await writer.write(new TextEncoder().encode(s));
 }
 
-async function readLine() {
-  return new Promise(resolve => lineResolvers.push(resolve));
+function readLine() {
+  return new Promise(res => lineQ.push(res));
 }
 
 async function readerLoop() {
   const dec = new TextDecoder();
   try {
     while (true) {
-      const {value, done} = await reader.read();
+      const { value, done } = await reader.read();
       if (done) break;
-      lineBuffer += dec.decode(value);
-      let nl;
-      while ((nl = lineBuffer.indexOf('\n')) !== -1) {
-        const line = lineBuffer.slice(0, nl);
-        lineBuffer = lineBuffer.slice(nl + 1);
-        log('< ' + line, 'log-rx');
-        if (lineResolvers.length > 0) lineResolvers.shift()(line);
+      lineBuf += dec.decode(value);
+      let i;
+      while ((i = lineBuf.indexOf('\n')) !== -1) {
+        const line = lineBuf.slice(0, i).replace(/\r$/, '');
+        lineBuf = lineBuf.slice(i + 1);
+        log('< ' + line);
+        if (lineQ.length) lineQ.shift()(line);
       }
     }
-  } catch(e) { /* port closed */ }
-}
-
-async function sendCommand(cmd) {
-  await writeLine(cmd + '\n');
+  } catch {}
 }
 
 async function readUntilOk() {
   const lines = [];
-  while (true) {
+  for (;;) {
     const l = await readLine();
-    if (l === 'OK') return {ok: true, lines};
-    if (l === 'FAIL') return {ok: false, lines};
+    if (l === 'OK')   return { ok: true, lines };
+    if (l === 'FAIL') return { ok: false, lines };
     lines.push(l);
   }
 }
 
-// ── Connect ───────────────────────────────────────────────────────────────────
 async function connect() {
   try {
     port = await navigator.serial.requestPort();
-    await port.open({baudRate: 115200});
+    await port.open({ baudRate: 115200 });
     reader = port.readable.getReader();
     writer = port.writable.getWriter();
     readerLoop();
     setConnected(true);
     log('Connected', 'log-ok');
-
-    await sendCommand('HELLO');
-    const res = await readUntilOk();
-    if (res.ok) {
-      log('Device: ' + res.lines.join(' '), 'log-ok');
+    await serialWrite('HELLO\n');
+    const r = await readUntilOk();
+    if (r.ok) {
+      log('Device: ' + r.lines.join(' '), 'log-ok');
       await loadFromDevice();
     } else {
       log('HELLO failed', 'log-err');
     }
-  } catch(e) {
-    log('Connect error: ' + e.message, 'log-err');
+  } catch (e) {
+    log('Error: ' + e.message, 'log-err');
     setConnected(false);
   }
 }
 
+async function disconnect() {
+  try {
+    if (reader) { await reader.cancel(); reader.releaseLock(); }
+    if (writer) { writer.releaseLock(); }
+    if (port)   { await port.close(); }
+  } catch {}
+  setConnected(false);
+  log('Disconnected');
+}
+
 function setConnected(v) {
-  document.getElementById('status-dot').className = v ? 'connected' : '';
+  document.getElementById('sdot').className = 'dot' + (v ? ' on' : '');
   document.getElementById('status-label').textContent = v ? 'Connected' : 'Disconnected';
   document.getElementById('btn-connect').textContent = v ? 'Disconnect' : 'Connect';
   document.getElementById('btn-load').disabled = !v;
@@ -326,27 +576,53 @@ function setConnected(v) {
   if (!v) { port = null; reader = null; writer = null; }
 }
 
-async function disconnect() {
-  try {
-    if (reader) { await reader.cancel(); reader.releaseLock(); }
-    if (writer) { writer.releaseLock(); }
-    if (port) { await port.close(); }
-  } catch(e) {}
-  setConnected(false);
-  log('Disconnected');
+// ── JSON ──────────────────────────────────────────────────────────────────────
+
+function parseAction(a) {
+  if (!a || a.t === 0) return { t:0, m:0, k:0, d:0, l:'---' };
+  if (a.t === 1) return { t:1, m:a.m??0, k:a.k??0, d:0, l:a.l??'' };
+  return { t:2, m:0, k:0, d:a.d??0, l:a.l??'' };
 }
 
-// ── Load / Save ───────────────────────────────────────────────────────────────
+function actionToJson(a) {
+  if (a.t === 0) return { t:0 };
+  if (a.t === 1) return { t:1, m:a.m, k:a.k, l:a.l };
+  return { t:2, d:a.d, l:a.l };
+}
+
+function parseJson(str) {
+  const obj = JSON.parse(str);
+  if (obj.v !== 1 || !Array.isArray(obj.profiles)) throw new Error('bad format');
+  return obj.profiles.map(p => ({
+    app: p.app ?? 0, name: p.name ?? '', el: p.el ?? '',
+    ew: parseAction(p.ew), eccw: parseAction(p.eccw),
+    x: parseAction(p.x), y: parseAction(p.y),
+    a: parseAction(p.a), b: parseAction(p.b),
+    c: parseAction(p.c), d: parseAction(p.d),
+  }));
+}
+
+function buildJson(profiles) {
+  return JSON.stringify({ v:1, profiles: profiles.map(p => ({
+    app: p.app, name: p.name, el: p.el,
+    ew: actionToJson(p.ew), eccw: actionToJson(p.eccw),
+    x: actionToJson(p.x),   y: actionToJson(p.y),
+    a: actionToJson(p.a),   b: actionToJson(p.b),
+    c: actionToJson(p.c),   d: actionToJson(p.d),
+  }))});
+}
+
+// ── Device I/O ────────────────────────────────────────────────────────────────
+
 async function loadFromDevice() {
-  await sendCommand('GET');
-  const res = await readUntilOk();
-  if (!res.ok) { log('GET failed', 'log-err'); return; }
-  const jsonStr = res.lines.join('');
+  await serialWrite('GET\n');
+  const r = await readUntilOk();
+  if (!r.ok) { log('GET failed', 'log-err'); return; }
   try {
-    const profiles = parseJson(jsonStr);
+    const profiles = parseJson(r.lines.join(''));
     renderEditors(profiles);
     log('Loaded ' + profiles.length + ' profiles', 'log-ok');
-  } catch(e) {
+  } catch (e) {
     log('Parse error: ' + e.message, 'log-err');
   }
 }
@@ -355,264 +631,472 @@ async function saveToDevice() {
   const profiles = collectProfiles();
   if (!profiles) return;
   const json = buildJson(profiles);
-  const enc = new TextEncoder();
-  const bytes = enc.encode(json);
-  await writeLine('SET ' + bytes.length + '\n');
+  const bytes = new TextEncoder().encode(json);
+  await serialWrite('SET ' + bytes.length + '\n');
   await writer.write(bytes);
-  const setRes = await readUntilOk();
-  if (!setRes.ok) { log('SET failed: ' + setRes.lines.join(' '), 'log-err'); return; }
-
-  await sendCommand('SAVE');
-  const saveRes = await readUntilOk();
-  if (saveRes.ok) {
-    log('Saved to flash', 'log-ok');
-  } else {
-    log('SAVE failed: ' + saveRes.lines.join(' '), 'log-err');
-  }
+  const sr = await readUntilOk();
+  if (!sr.ok) { log('SET failed: ' + sr.lines.join(' '), 'log-err'); return; }
+  await serialWrite('SAVE\n');
+  const fr = await readUntilOk();
+  if (fr.ok) log('Saved to flash ✓', 'log-ok');
+  else log('SAVE failed: ' + fr.lines.join(' '), 'log-err');
 }
 
-// ── UI rendering ──────────────────────────────────────────────────────────────
-const APP_NAMES = ['Chrome','Claude','Fusion','KiCad','Krita'];
-const ACTION_SLOTS = [
-  ['ew',   'ENC2 CW'],
-  ['eccw', 'ENC2 CCW'],
-  ['x',    'BTN X'],
-  ['y',    'BTN Y'],
-  ['a',    'BTN A'],
-  ['b',    'BTN B'],
-  ['c',    'BTN C'],
-  ['d',    'BTN D'],
-];
+// ── Icon Manager ──────────────────────────────────────────────────────────────
+
+// iconData[appName] = Uint16Array of RGB565 (32×32, byte-swapped)
+const iconData = {};
+let pendingIconSlot = null;
+
+const ICON_SIZE = 32;
+
+function initIconGrid() {
+  const grid = document.getElementById('icon-grid');
+  grid.innerHTML = '';
+  APP_NAMES.forEach(name => {
+    const slot = document.createElement('div');
+    slot.className = 'icon-slot';
+    slot.title = 'Click to upload icon for ' + name;
+
+    const wrap = document.createElement('div');
+    wrap.className = 'icon-wrap';
+
+    const canvas = document.createElement('canvas');
+    canvas.width = ICON_SIZE;
+    canvas.height = ICON_SIZE;
+    canvas.id = 'icon-canvas-' + name.toLowerCase();
+
+    const ph = document.createElement('div');
+    ph.className = 'ph';
+    ph.textContent = '+';
+
+    wrap.appendChild(canvas);
+    wrap.appendChild(ph);
+
+    const lbl = document.createElement('span');
+    lbl.textContent = name;
+
+    slot.appendChild(wrap);
+    slot.appendChild(lbl);
+    slot.addEventListener('click', () => {
+      pendingIconSlot = name;
+      document.getElementById('icon-file-input').value = '';
+      document.getElementById('icon-file-input').click();
+    });
+
+    grid.appendChild(slot);
+
+    // drag-drop
+    wrap.addEventListener('dragover', e => { e.preventDefault(); wrap.style.borderColor = 'var(--accent)'; });
+    wrap.addEventListener('dragleave', () => { wrap.style.borderColor = ''; });
+    wrap.addEventListener('drop', e => {
+      e.preventDefault();
+      wrap.style.borderColor = '';
+      const file = e.dataTransfer.files[0];
+      if (file) loadIconFile(name, file);
+    });
+  });
+}
+
+async function loadIconFile(appName, file) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.getElementById('icon-canvas-' + appName.toLowerCase());
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+
+      // Crop to square from center
+      const sz = Math.min(img.width, img.height);
+      const sx = (img.width  - sz) / 2;
+      const sy = (img.height - sz) / 2;
+      ctx.clearRect(0, 0, ICON_SIZE, ICON_SIZE);
+      ctx.drawImage(img, sx, sy, sz, sz, 0, 0, ICON_SIZE, ICON_SIZE);
+      URL.revokeObjectURL(img.src);
+
+      // Hide placeholder "+"
+      const ph = canvas.parentElement.querySelector('.ph');
+      if (ph) ph.style.display = 'none';
+
+      // Convert to RGB565 (byte-swapped for RP2040 DMA)
+      const pixels = ctx.getImageData(0, 0, ICON_SIZE, ICON_SIZE).data;
+      const words = new Uint16Array(ICON_SIZE * ICON_SIZE);
+      for (let i = 0, j = 0; i < pixels.length; i += 4, j++) {
+        const r = pixels[i]   >> 3;
+        const g = pixels[i+1] >> 2;
+        const b = pixels[i+2] >> 3;
+        const rgb = (r << 11) | (g << 5) | b;
+        words[j] = ((rgb & 0xFF) << 8) | (rgb >> 8); // byte-swap
+      }
+      iconData[appName] = words;
+      log(`Icon loaded: ${appName} (${ICON_SIZE}×${ICON_SIZE})`, 'log-ok');
+      resolve();
+    };
+    img.onerror = () => { log('Failed to load image', 'log-err'); resolve(); };
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+function downloadIconsHeader() {
+  if (Object.keys(iconData).length === 0) {
+    log('No icons uploaded yet', 'log-err');
+    return;
+  }
+  const lines = [
+    '// Auto-generated by RP Commander web configurator',
+    `// Icon size: ${ICON_SIZE}×${ICON_SIZE} px, RGB565 byte-swapped`,
+    '',
+    `#define ICON_DATA_SIZE ${ICON_SIZE}`,
+    '',
+  ];
+  for (const [name, words] of Object.entries(iconData)) {
+    const upper = name.toUpperCase();
+    const lower = name.toLowerCase();
+    lines.push(`#define ICON_DATA_${upper}`);
+    lines.push(`static const uint16_t icon_data_${lower}[${ICON_SIZE * ICON_SIZE}] = {`);
+    for (let row = 0; row < ICON_SIZE; row++) {
+      const chunk = Array.from(words.slice(row * ICON_SIZE, (row + 1) * ICON_SIZE))
+                         .map(w => '0x' + w.toString(16).padStart(4, '0'));
+      lines.push('  ' + chunk.join(', ') + ',');
+    }
+    lines.push('};');
+    lines.push('');
+  }
+  const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'icons_data.h';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  log('Downloaded icons_data.h (' + Object.keys(iconData).length + ' icons)', 'log-ok');
+}
+
+// ── Profile editor rendering ──────────────────────────────────────────────────
 
 function buildKeySelect(id, selectedCode) {
   const sel = document.createElement('select');
   sel.id = id;
   for (const [name, code] of HID_KEYS) {
-    const opt = document.createElement('option');
-    opt.value = code;
-    opt.textContent = name;
-    if (code === selectedCode) opt.selected = true;
-    sel.appendChild(opt);
+    const o = document.createElement('option');
+    o.value = code;
+    o.textContent = name;
+    if (code === selectedCode) o.selected = true;
+    sel.appendChild(o);
   }
   return sel;
 }
 
-function buildActionCard(profileIdx, slotKey, slotLabel, action) {
+function buildActionCard(pi, slot, action) {
   const card = document.createElement('div');
-  card.className = 'action-card';
+  card.className = 'acard';
 
-  const h = document.createElement('h3');
-  h.textContent = slotLabel;
-  card.appendChild(h);
+  // Header: slot name + summary
+  const head = document.createElement('div');
+  head.className = 'acard-head';
+  const nameEl = document.createElement('span');
+  nameEl.className = 'acard-name';
+  nameEl.textContent = slot.name;
+  nameEl.title = slot.desc;
+  const summaryEl = document.createElement('span');
+  summaryEl.className = 'acard-summary';
+  summaryEl.id = `p${pi}_${slot.key}_summary`;
+  summaryEl.textContent = actionSummary(action);
+  head.appendChild(nameEl);
+  head.appendChild(summaryEl);
+  card.appendChild(head);
 
-  const fields = document.createElement('div');
-  fields.className = 'action-fields';
-
-  // Type selector
+  // Type toggle
   const typeRow = document.createElement('div');
-  typeRow.className = 'action-row';
-  const typeSel = document.createElement('select');
-  typeSel.id = `p${profileIdx}_${slotKey}_type`;
-  [['None',0],['Key',1],['Scroll',2]].forEach(([n,v]) => {
-    const o = document.createElement('option');
-    o.value = v; o.textContent = n;
-    if (v === action.t) o.selected = true;
-    typeSel.appendChild(o);
-  });
-  typeRow.appendChild(typeSel);
-  fields.appendChild(typeRow);
+  typeRow.className = 'type-row';
+  for (const [label, val] of [['None',0],['Key',1],['Scroll',2]]) {
+    const btn = document.createElement('div');
+    btn.className = 'ttype' + (action.t === val ? ' on' : '');
+    btn.textContent = label;
+    btn.dataset.val = val;
+    btn.addEventListener('click', () => {
+      typeRow.querySelectorAll('.ttype').forEach(b => b.classList.remove('on'));
+      btn.classList.add('on');
+      const t = parseInt(btn.dataset.val);
+      keyFieldsEl.classList.toggle('show', t === 1);
+      scrollFieldsEl.classList.toggle('show', t === 2);
+      updateSummary(pi, slot.key);
+    });
+    typeRow.appendChild(btn);
+  }
+  card.appendChild(typeRow);
 
   // Key fields
-  const keyFields = document.createElement('div');
-  keyFields.id = `p${profileIdx}_${slotKey}_keyfields`;
-  keyFields.style.display = action.t === 1 ? 'flex' : 'none';
-  keyFields.style.flexDirection = 'column';
-  keyFields.style.gap = '5px';
+  const keyFieldsEl = document.createElement('div');
+  keyFieldsEl.className = 'key-fields' + (action.t === 1 ? ' show' : '');
 
+  // Modifier pills
   const modRow = document.createElement('div');
-  modRow.className = 'mod-checks';
-  [['Ctrl',MOD_CTRL],['Shift',MOD_SHIFT],['Alt',MOD_ALT],['Gui',MOD_GUI]].forEach(([name,bit]) => {
-    const lbl = document.createElement('label');
-    lbl.className = 'mod-check';
-    const cb = document.createElement('input');
-    cb.type = 'checkbox';
-    cb.id = `p${profileIdx}_${slotKey}_mod_${bit}`;
-    cb.checked = !!(action.m & bit);
-    lbl.appendChild(cb);
-    lbl.appendChild(document.createTextNode(name));
-    modRow.appendChild(lbl);
-  });
-  keyFields.appendChild(modRow);
+  modRow.className = 'mod-row';
+  for (const m of MODS) {
+    const pill = document.createElement('div');
+    pill.className = 'mod-pill' + ((action.m & m.bit) ? ' on' : '');
+    pill.textContent = m.sym;
+    pill.title = m.tip;
+    pill.dataset.bit = m.bit;
+    pill.id = `p${pi}_${slot.key}_mod_${m.bit}`;
+    pill.addEventListener('click', () => {
+      pill.classList.toggle('on');
+      updateSummary(pi, slot.key);
+    });
+    modRow.appendChild(pill);
+  }
+  keyFieldsEl.appendChild(modRow);
 
+  // Key dropdown
   const keyRow = document.createElement('div');
-  keyRow.className = 'action-row';
-  const keySel = buildKeySelect(`p${profileIdx}_${slotKey}_key`, action.k ?? 0);
+  keyRow.className = 'key-row';
+  const keySel = buildKeySelect(`p${pi}_${slot.key}_key`, action.k ?? 0);
+  keySel.addEventListener('change', () => updateSummary(pi, slot.key));
   keyRow.appendChild(keySel);
-  keyFields.appendChild(keyRow);
-  fields.appendChild(keyFields);
+  keyFieldsEl.appendChild(keyRow);
+  card.appendChild(keyFieldsEl);
 
   // Scroll fields
-  const scrollFields = document.createElement('div');
-  scrollFields.id = `p${profileIdx}_${slotKey}_scrollfields`;
-  scrollFields.className = 'action-row';
-  scrollFields.style.display = action.t === 2 ? 'flex' : 'none';
-  const deltaLabel = document.createElement('label');
-  deltaLabel.textContent = 'Delta:';
-  deltaLabel.style.color = 'var(--text2)';
-  const deltaInput = document.createElement('input');
-  deltaInput.type = 'number';
-  deltaInput.className = 'tiny';
-  deltaInput.id = `p${profileIdx}_${slotKey}_delta`;
-  deltaInput.min = -127; deltaInput.max = 127;
-  deltaInput.value = action.d ?? 0;
-  scrollFields.appendChild(deltaLabel);
-  scrollFields.appendChild(deltaInput);
-  fields.appendChild(scrollFields);
+  const scrollFieldsEl = document.createElement('div');
+  scrollFieldsEl.className = 'scroll-fields' + (action.t === 2 ? ' show' : '');
 
-  // Label field (shared)
-  const labelRow = document.createElement('div');
-  labelRow.className = 'action-row';
-  const labelTxt = document.createElement('label');
-  labelTxt.textContent = 'Label:';
-  labelTxt.style.color = 'var(--text2)';
-  const labelInput = document.createElement('input');
-  labelInput.type = 'text';
-  labelInput.className = 'narrow';
-  labelInput.id = `p${profileIdx}_${slotKey}_label`;
-  labelInput.maxLength = 8;
-  labelInput.value = action.l && action.l !== '---' ? action.l : '';
-  labelRow.appendChild(labelTxt);
-  labelRow.appendChild(labelInput);
-  fields.appendChild(labelRow);
+  const deltaRow = document.createElement('div');
+  deltaRow.className = 'delta-row';
+  const deltaLbl = document.createElement('label');
+  deltaLbl.textContent = 'Delta';
+  const deltaCtrls = document.createElement('div');
+  deltaCtrls.className = 'delta-ctrls';
 
-  card.appendChild(fields);
+  let deltaVal = action.d ?? 0;
+  const deltaDisp = document.createElement('span');
+  deltaDisp.className = 'delta-val';
+  deltaDisp.id = `p${pi}_${slot.key}_delta`;
+  deltaDisp.textContent = deltaVal;
 
-  // Show/hide conditional fields
-  typeSel.addEventListener('change', () => {
-    const t = parseInt(typeSel.value);
-    keyFields.style.display    = t === 1 ? 'flex' : 'none';
-    scrollFields.style.display = t === 2 ? 'flex' : 'none';
+  const btnMinus = document.createElement('button');
+  btnMinus.className = 'icon-btn sm';
+  btnMinus.textContent = '−';
+  btnMinus.addEventListener('click', () => {
+    deltaVal = Math.max(-127, deltaVal - 1);
+    deltaDisp.textContent = deltaVal;
+    updateSummary(pi, slot.key);
   });
+  const btnPlus = document.createElement('button');
+  btnPlus.className = 'icon-btn sm';
+  btnPlus.textContent = '+';
+  btnPlus.addEventListener('click', () => {
+    deltaVal = Math.min(127, deltaVal + 1);
+    deltaDisp.textContent = deltaVal;
+    updateSummary(pi, slot.key);
+  });
+
+  deltaCtrls.appendChild(btnMinus);
+  deltaCtrls.appendChild(deltaDisp);
+  deltaCtrls.appendChild(btnPlus);
+  deltaRow.appendChild(deltaLbl);
+  deltaRow.appendChild(deltaCtrls);
+  scrollFieldsEl.appendChild(deltaRow);
+  card.appendChild(scrollFieldsEl);
+
+  // LCD Label
+  const lblRow = document.createElement('div');
+  lblRow.className = 'lbl-row';
+  const lblLabel = document.createElement('label');
+  lblLabel.textContent = 'LCD';
+  const lblInput = document.createElement('input');
+  lblInput.type = 'text';
+  lblInput.id = `p${pi}_${slot.key}_label`;
+  lblInput.maxLength = 8;
+  lblInput.value = (action.l && action.l !== '---') ? action.l : '';
+  lblInput.placeholder = '(8 chars max)';
+  lblInput.style.fontSize = '11px';
+  lblRow.appendChild(lblLabel);
+  lblRow.appendChild(lblInput);
+  card.appendChild(lblRow);
 
   return card;
 }
 
+function updateSummary(pi, slotKey) {
+  const a = collectAction(pi, slotKey);
+  const el = document.getElementById(`p${pi}_${slotKey}_summary`);
+  if (el) el.textContent = actionSummary(a);
+}
+
 function renderEditors(profiles) {
-  const tabsEl = document.getElementById('tabs');
+  const tabsEl    = document.getElementById('tabs');
   const editorsEl = document.getElementById('editors');
   tabsEl.innerHTML = '';
   editorsEl.innerHTML = '';
 
   profiles.forEach((p, i) => {
+    // Tab
     const tab = document.createElement('div');
     tab.className = 'tab' + (i === 0 ? ' active' : '');
-    tab.textContent = `${i+1}. ${p.name}`;
-    tab.dataset.idx = i;
+    tab.textContent = (i + 1) + '. ' + p.name;
     tab.addEventListener('click', () => {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.profile-editor').forEach(e => e.classList.remove('active'));
       tab.classList.add('active');
-      document.getElementById(`editor-${i}`).classList.add('active');
+      document.getElementById(`ed-${i}`).classList.add('active');
     });
     tabsEl.appendChild(tab);
 
-    const editor = document.createElement('div');
-    editor.className = 'profile-editor' + (i === 0 ? ' active' : '');
-    editor.id = `editor-${i}`;
+    // Editor
+    const ed = document.createElement('div');
+    ed.className = 'profile-editor' + (i === 0 ? ' active' : '');
+    ed.id = `ed-${i}`;
 
     // Meta row
     const meta = document.createElement('div');
     meta.className = 'profile-meta';
 
-    const nameGroup = document.createElement('div');
-    nameGroup.className = 'field-group';
-    const nameLbl = document.createElement('label');
-    nameLbl.textContent = 'Profile Name';
-    const nameInput = document.createElement('input');
-    nameInput.type = 'text'; nameInput.className = 'wider';
-    nameInput.id = `p${i}_name`; nameInput.maxLength = 15;
-    nameInput.value = p.name;
-    nameInput.addEventListener('input', () => { tab.textContent = `${i+1}. ${nameInput.value}`; });
-    nameGroup.appendChild(nameLbl); nameGroup.appendChild(nameInput);
-    meta.appendChild(nameGroup);
+    function field(labelText, el) {
+      const g = document.createElement('div');
+      g.className = 'field';
+      const lbl = document.createElement('label');
+      lbl.textContent = labelText;
+      g.appendChild(lbl);
+      g.appendChild(el);
+      return g;
+    }
 
-    const elGroup = document.createElement('div');
-    elGroup.className = 'field-group';
-    const elLbl = document.createElement('label');
-    elLbl.textContent = 'ENC2 Label';
-    const elInput = document.createElement('input');
-    elInput.type = 'text'; elInput.className = 'narrow';
-    elInput.id = `p${i}_el`; elInput.maxLength = 8;
-    elInput.value = p.el;
-    elGroup.appendChild(elLbl); elGroup.appendChild(elInput);
-    meta.appendChild(elGroup);
+    const nameIn = document.createElement('input');
+    nameIn.type = 'text'; nameIn.id = `p${i}_name`;
+    nameIn.maxLength = 15; nameIn.value = p.name;
+    nameIn.style.width = '140px';
+    nameIn.addEventListener('input', () => { tab.textContent = (i+1) + '. ' + nameIn.value; });
 
-    const appGroup = document.createElement('div');
-    appGroup.className = 'field-group';
-    const appLbl = document.createElement('label');
-    appLbl.textContent = 'App';
+    const elIn = document.createElement('input');
+    elIn.type = 'text'; elIn.id = `p${i}_el`;
+    elIn.maxLength = 8; elIn.value = p.el;
+    elIn.style.width = '90px';
+
     const appSel = document.createElement('select');
     appSel.id = `p${i}_app`;
     APP_NAMES.forEach((name, ai) => {
-      const opt = document.createElement('option');
-      opt.value = ai; opt.textContent = name;
-      if (ai === p.app) opt.selected = true;
-      appSel.appendChild(opt);
+      const o = document.createElement('option');
+      o.value = ai; o.textContent = name;
+      if (ai === p.app) o.selected = true;
+      appSel.appendChild(o);
     });
-    appGroup.appendChild(appLbl); appGroup.appendChild(appSel);
-    meta.appendChild(appGroup);
 
-    editor.appendChild(meta);
+    meta.appendChild(field('Profile Name', nameIn));
+    meta.appendChild(field('ENC2 Label', elIn));
+    meta.appendChild(field('App', appSel));
+    ed.appendChild(meta);
 
-    const grid = document.createElement('div');
-    grid.className = 'actions-grid';
-    for (const [key, label] of ACTION_SLOTS) {
-      grid.appendChild(buildActionCard(i, key, label, p[key]));
+    // ENC2 section
+    const enc2Sec = document.createElement('div');
+    enc2Sec.className = 'ctrl-sec';
+    const enc2Title = document.createElement('div');
+    enc2Title.className = 'ctrl-sec-title';
+    enc2Title.textContent = 'Encoder (ENC2)';
+    enc2Sec.appendChild(enc2Title);
+    const enc2Row = document.createElement('div');
+    enc2Row.className = 'ctrl-row';
+    const ewSlot  = ACTION_SLOTS.find(s => s.key === 'ew');
+    const eccwSlot = ACTION_SLOTS.find(s => s.key === 'eccw');
+    enc2Row.appendChild(buildActionCard(i, ewSlot,  p.ew));
+    enc2Row.appendChild(buildActionCard(i, eccwSlot, p.eccw));
+    enc2Sec.appendChild(enc2Row);
+    ed.appendChild(enc2Sec);
+
+    // X / Y section
+    const xySec = document.createElement('div');
+    xySec.className = 'ctrl-sec';
+    const xyTitle = document.createElement('div');
+    xyTitle.className = 'ctrl-sec-title';
+    xyTitle.textContent = 'Side Buttons';
+    xySec.appendChild(xyTitle);
+    const xyRow = document.createElement('div');
+    xyRow.className = 'ctrl-row';
+    xyRow.appendChild(buildActionCard(i, ACTION_SLOTS.find(s=>s.key==='x'), p.x));
+    xyRow.appendChild(buildActionCard(i, ACTION_SLOTS.find(s=>s.key==='y'), p.y));
+    xySec.appendChild(xyRow);
+    ed.appendChild(xySec);
+
+    // A / B / C / D section
+    const abcdSec = document.createElement('div');
+    abcdSec.className = 'ctrl-sec';
+    const abcdTitle = document.createElement('div');
+    abcdTitle.className = 'ctrl-sec-title';
+    abcdTitle.textContent = 'Main Buttons';
+    abcdSec.appendChild(abcdTitle);
+    const abcdRow = document.createElement('div');
+    abcdRow.className = 'ctrl-row';
+    for (const k of ['a','b','c','d']) {
+      abcdRow.appendChild(buildActionCard(i, ACTION_SLOTS.find(s=>s.key===k), p[k]));
     }
-    editor.appendChild(grid);
-    editorsEl.appendChild(editor);
+    abcdSec.appendChild(abcdRow);
+    ed.appendChild(abcdSec);
+
+    editorsEl.appendChild(ed);
   });
 }
 
-function collectAction(profileIdx, slotKey) {
-  const t = parseInt(document.getElementById(`p${profileIdx}_${slotKey}_type`).value);
-  const label = document.getElementById(`p${profileIdx}_${slotKey}_label`).value.trim() || '---';
-  if (t === 0) return {t:0, m:0, k:0, d:0, l:'---'};
+// ── Collect ───────────────────────────────────────────────────────────────────
+
+function collectAction(pi, slotKey) {
+  const typeBtn = document.querySelector(`#ed-${pi} .acard [data-val].on`);
+  // find type for this specific slot
+  const card = document.getElementById(`p${pi}_${slotKey}_summary`)?.closest('.acard');
+  if (!card) return { t:0, m:0, k:0, d:0, l:'---' };
+
+  const tBtn = card.querySelector('.ttype.on');
+  const t = tBtn ? parseInt(tBtn.dataset.val) : 0;
+  const lbl = (document.getElementById(`p${pi}_${slotKey}_label`)?.value.trim()) || '---';
+
+  if (t === 0) return { t:0, m:0, k:0, d:0, l:'---' };
   if (t === 1) {
     let mod = 0;
-    for (const [,bit] of [['Ctrl',MOD_CTRL],['Shift',MOD_SHIFT],['Alt',MOD_ALT],['Gui',MOD_GUI]]) {
-      if (document.getElementById(`p${profileIdx}_${slotKey}_mod_${bit}`).checked) mod |= bit;
+    for (const m of MODS) {
+      const pill = document.getElementById(`p${pi}_${slotKey}_mod_${m.bit}`);
+      if (pill?.classList.contains('on')) mod |= m.bit;
     }
-    const k = parseInt(document.getElementById(`p${profileIdx}_${slotKey}_key`).value);
-    return {t:1, m:mod, k, d:0, l:label};
+    const k = parseInt(document.getElementById(`p${pi}_${slotKey}_key`)?.value ?? 0);
+    return { t:1, m:mod, k, d:0, l:lbl };
   }
-  const d = parseInt(document.getElementById(`p${profileIdx}_${slotKey}_delta`).value) || 0;
-  return {t:2, m:0, k:0, d, l:label};
+  const d = parseInt(document.getElementById(`p${pi}_${slotKey}_delta`)?.textContent ?? 0);
+  return { t:2, m:0, k:0, d, l:lbl };
 }
 
 function collectProfiles() {
   const tabs = document.querySelectorAll('.tab');
-  if (tabs.length === 0) { log('No profiles loaded', 'log-err'); return null; }
-  const profiles = [];
-  tabs.forEach((tab, i) => {
+  if (!tabs.length) { log('No profiles loaded', 'log-err'); return null; }
+  return Array.from(tabs).map((_, i) => {
     const p = {
       app:  parseInt(document.getElementById(`p${i}_app`).value),
       name: document.getElementById(`p${i}_name`).value.slice(0, 15),
       el:   document.getElementById(`p${i}_el`).value.slice(0, 8),
     };
-    for (const [key] of ACTION_SLOTS) p[key] = collectAction(i, key);
-    profiles.push(p);
+    for (const slot of ACTION_SLOTS) p[slot.key] = collectAction(i, slot.key);
+    return p;
   });
-  return profiles;
 }
 
-// ── Wiring ────────────────────────────────────────────────────────────────────
-document.getElementById('btn-connect').addEventListener('click', async () => {
-  if (port) await disconnect();
-  else await connect();
+// ── Init ──────────────────────────────────────────────────────────────────────
+
+initIconGrid();
+
+document.getElementById('btn-connect').addEventListener('click', () => {
+  if (port) disconnect(); else connect();
 });
 document.getElementById('btn-load').addEventListener('click', loadFromDevice);
 document.getElementById('btn-save').addEventListener('click', saveToDevice);
+document.getElementById('btn-dl-icons').addEventListener('click', downloadIconsHeader);
+
+document.getElementById('icon-file-input').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (file && pendingIconSlot) await loadIconFile(pendingIconSlot, file);
+  pendingIconSlot = null;
+});
+
+if (!navigator.serial) {
+  log('WebSerial not available — use Chrome or Edge', 'log-err');
+  document.getElementById('btn-connect').disabled = true;
+}
 </script>
 </body>
 </html>

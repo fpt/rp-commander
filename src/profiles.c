@@ -55,8 +55,8 @@ profile_t g_profiles[] = {
     {
         .app_idx    = ICON_CLAUDE,
         .name       = "Chat",
-        .enc2_cw    = SCR(-1, "Down"),
-        .enc2_ccw   = SCR(+1, "Up"),
+        .enc2_cw    = SCR(+1, "Up"),
+        .enc2_ccw   = SCR(-1, "Down"),
         .enc2_label = "Scroll",
         .btn_x      = KEY(_S,   TAB,    "S+Tab"),
         .btn_y      = KEY(0,    RETURN, "Enter"),
