@@ -54,8 +54,7 @@ Profiles can be read and written at runtime using either the web configurator or
 
 ### Web configurator (Chrome / Edge only)
 
-Open the GitHub Pages URL for this repo, click **Connect**, and select the "Commander CDC" port.
-Requires enabling GitHub Pages in repo Settings → Pages → source: `docs/` on `main`.
+Open **[https://fpt.github.io/rp-commander/](https://fpt.github.io/rp-commander/)**, click **Connect**, and select the "Commander CDC" port.
 
 ### Python CLI
 
