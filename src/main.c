@@ -132,8 +132,7 @@ int main(void) {
                           % g_num_profiles;
             ui_draw(fb, cur_profile);
             lcd_flush_full(fb);
-            printf("profile %d: %s / %s\n", cur_profile,
-                   g_apps[g_profiles[cur_profile].app_idx].name,
+            printf("profile %d: %s\n", cur_profile,
                    g_profiles[cur_profile].name);
         }
 

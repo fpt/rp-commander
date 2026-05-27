@@ -11,7 +11,7 @@
 
 static char    cmd_buf[64];
 static int     cmd_len   = 0;
-static char    json_buf[4096];
+static char    json_buf[20480];  // large enough for profiles + 5 × 32×32 icons in base64
 
 // SET state: how many bytes remain to read for the incoming JSON body
 static int     set_remaining = 0;

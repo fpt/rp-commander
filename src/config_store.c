@@ -5,12 +5,14 @@
 #include "pico/stdlib.h"
 #include <string.h>
 
-#define MAGIC         0x52504346u   // "RPCF"
-#define CONFIG_OFFSET (PICO_FLASH_SIZE_BYTES - FLASH_SECTOR_SIZE)
+#define MAGIC          0x52504346u   // "RPCF"
+#define CONFIG_SECTORS 6             // 6 × 4 KiB = 24 KiB (holds icons + profiles)
+#define CONFIG_SIZE    (CONFIG_SECTORS * FLASH_SECTOR_SIZE)
+#define CONFIG_OFFSET  (PICO_FLASH_SIZE_BYTES - CONFIG_SIZE)
 
 // Header: magic(4) + crc32(4) + len(4) = 12 bytes
 #define HEADER_SIZE   12
-#define MAX_DATA_SIZE (FLASH_SECTOR_SIZE - HEADER_SIZE)
+#define MAX_DATA_SIZE (CONFIG_SIZE - HEADER_SIZE)
 
 static uint32_t crc32(const uint8_t *data, size_t len) {
     uint32_t crc = 0xFFFFFFFFu;
@@ -45,8 +47,8 @@ int config_store_load(char *out_json, size_t out_size) {
 int config_store_save(const uint8_t *data, size_t len) {
     if (len == 0 || len > MAX_DATA_SIZE) return -1;
 
-    static uint8_t page[FLASH_SECTOR_SIZE];
-    memset(page, 0xFF, sizeof(page));
+    static uint8_t page[CONFIG_SIZE];
+    memset(page, 0xFF, CONFIG_SIZE);
 
     uint32_t magic = MAGIC;
     uint32_t crc   = crc32(data, len);
@@ -58,8 +60,8 @@ int config_store_save(const uint8_t *data, size_t len) {
     memcpy(page + HEADER_SIZE, data, len);
 
     uint32_t save = save_and_disable_interrupts();
-    flash_range_erase(CONFIG_OFFSET, FLASH_SECTOR_SIZE);
-    flash_range_program(CONFIG_OFFSET, page, FLASH_SECTOR_SIZE);
+    flash_range_erase(CONFIG_OFFSET, CONFIG_SIZE);
+    flash_range_program(CONFIG_OFFSET, page, CONFIG_SIZE);
     restore_interrupts(save);
 
     return 0;

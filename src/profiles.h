@@ -32,8 +32,8 @@ typedef struct {
 // ── Profile ───────────────────────────────────────────────────────────────────
 
 typedef struct {
-    uint8_t      app_idx;      // index into g_apps[]
-    char         name[16];     // profile name, e.g. "Sketch"
+    uint8_t      icon_idx;     // ICON_xxx constant
+    char         name[16];     // display name, e.g. "Chrome"
     // ENC2 (right encoder) action
     action_t     enc2_cw;
     action_t     enc2_ccw;
@@ -47,14 +47,7 @@ typedef struct {
     action_t     btn_d;
 } profile_t;
 
-// ── App ───────────────────────────────────────────────────────────────────────
-
-typedef struct {
-    const char *name;      // e.g. "Chrome"
-    uint8_t     icon_idx;  // selects which icon_draw_*() to call
-} app_t;
-
-// App icon indices
+// App icon indices (also used as profile index in the 1-profile-per-app model)
 #define ICON_CHROME  0
 #define ICON_CLAUDE  1
 #define ICON_FUSION  2
@@ -63,19 +56,8 @@ typedef struct {
 
 // ── Global tables ─────────────────────────────────────────────────────────────
 
-extern const app_t     g_apps[];
-extern const int       g_num_apps;
-
 extern profile_t g_profiles[];
 extern const int g_num_profiles;
-
-// ── Navigation helpers ────────────────────────────────────────────────────────
-
-// Returns g_profiles[idx].app_idx
-int profile_app(int profile_idx);
-
-// Find the first profile index whose app_idx == app
-int profile_first_for_app(int app_idx);
 
 // Serialize all profiles to compact JSON. Returns total length written.
 int profiles_to_json(char *buf, size_t bufsize);

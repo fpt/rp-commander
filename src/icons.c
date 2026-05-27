@@ -7,6 +7,7 @@
 #include "lcd.h"
 #include "font.h"
 #include "profiles.h"
+#include <string.h>
 
 #if __has_include("icons_data.h")
 #include "icons_data.h"
@@ -137,13 +138,31 @@ static void icon_krita(uint16_t *fb, int x, int y, int sz, bool sel) {
     if (sel) draw_rect(fb, x, y, sz, sz, brd);
 }
 
-// ── Real-icon blit (used when icons_data.h is present) ───────────────────────
+// ── Runtime icons (uploaded via CDC, stored in RAM) ──────────────────────────
 
-#ifdef ICON_DATA_SIZE
-static void blit_icon(uint16_t *fb, int x, int y, int cell,
-                      const uint16_t *data, bool selected) {
-    int isz = ICON_DATA_SIZE;
-    int off = (cell - isz) / 2;   // centre within cell
+static uint16_t rt_icons[5][ICON_RT_SIZE * ICON_RT_SIZE];
+static bool     rt_valid[5];
+
+void icon_set_runtime(int app_idx, const uint16_t *data) {
+    if (app_idx < 0 || app_idx >= 5) return;
+    memcpy(rt_icons[app_idx], data, ICON_RT_SIZE * ICON_RT_SIZE * sizeof(uint16_t));
+    rt_valid[app_idx] = true;
+}
+
+bool icon_has_runtime(int app_idx) {
+    return app_idx >= 0 && app_idx < 5 && rt_valid[app_idx];
+}
+
+const uint16_t *icon_get_runtime(int app_idx) {
+    if (!icon_has_runtime(app_idx)) return NULL;
+    return rt_icons[app_idx];
+}
+
+// ── Generic blit (used for both runtime icons and compiled-in icons_data.h) ───
+
+static void blit_icon_data(uint16_t *fb, int x, int y, int cell,
+                            const uint16_t *data, int isz, bool selected) {
+    int off = (cell - isz) / 2;
     fill_rect(fb, x, y, cell, cell, COL_BLACK);
     for (int row = 0; row < isz; row++) {
         int dy = y + off + row;
@@ -156,11 +175,22 @@ static void blit_icon(uint16_t *fb, int x, int y, int cell,
     }
     if (selected) draw_rect(fb, x, y, cell, cell, COL_WHITE);
 }
+
+#ifdef ICON_DATA_SIZE
+static void blit_icon(uint16_t *fb, int x, int y, int cell,
+                      const uint16_t *data, bool selected) {
+    blit_icon_data(fb, x, y, cell, data, ICON_DATA_SIZE, selected);
+}
 #endif
 
 // ── Dispatch ──────────────────────────────────────────────────────────────────
 
 void icon_draw(uint16_t *fb, int x, int y, int size, int icon_idx, bool selected) {
+    // Runtime icons (uploaded via CDC) take priority over everything else.
+    if (icon_idx != ICON_CLAUDE && icon_has_runtime(icon_idx)) {
+        blit_icon_data(fb, x, y, size, rt_icons[icon_idx], ICON_RT_SIZE, selected);
+        return;
+    }
     switch (icon_idx) {
     case ICON_CHROME:
 #ifdef ICON_DATA_CHROME

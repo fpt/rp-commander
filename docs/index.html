@@ -576,6 +576,42 @@ function setConnected(v) {
   if (!v) { port = null; reader = null; writer = null; }
 }
 
+// ── Base64 ────────────────────────────────────────────────────────────────────
+
+function iconToBase64(words) {
+  // words is Uint16Array (byte-swapped RGB565)
+  const bytes = new Uint8Array(words.buffer, words.byteOffset, words.byteLength);
+  let s = '';
+  for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+  return btoa(s);
+}
+
+function base64ToIcon(b64) {
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new Uint16Array(bytes.buffer);
+}
+
+// Render a Uint16Array of byte-swapped RGB565 onto an app's canvas.
+function renderIconWords(appName, words) {
+  const canvas = document.getElementById('icon-canvas-' + appName.toLowerCase());
+  if (!canvas) return;
+  const sz = ICON_SIZE;
+  const img = canvas.getContext('2d').createImageData(sz, sz);
+  for (let i = 0; i < sz * sz; i++) {
+    const w = words[i];
+    const rgb = ((w & 0xFF) << 8) | (w >> 8); // undo byte-swap
+    img.data[i*4+0] = ((rgb >> 11) & 0x1F) << 3;
+    img.data[i*4+1] = ((rgb >>  5) & 0x3F) << 2;
+    img.data[i*4+2] = ( rgb        & 0x1F) << 3;
+    img.data[i*4+3] = 255;
+  }
+  canvas.getContext('2d').putImageData(img, 0, 0);
+  const ph = canvas.parentElement?.querySelector('.ph');
+  if (ph) ph.style.display = 'none';
+}
+
 // ── JSON ──────────────────────────────────────────────────────────────────────
 
 function parseAction(a) {
@@ -593,8 +629,20 @@ function actionToJson(a) {
 function parseJson(str) {
   const obj = JSON.parse(str);
   if (obj.v !== 1 || !Array.isArray(obj.profiles)) throw new Error('bad format');
+
+  // Restore any icons embedded in the JSON
+  if (obj.icons && typeof obj.icons === 'object') {
+    for (const [name, b64] of Object.entries(obj.icons)) {
+      try {
+        const words = base64ToIcon(b64);
+        iconData[name] = words;
+        renderIconWords(name, words);
+      } catch {}
+    }
+  }
+
   return obj.profiles.map(p => ({
-    app: p.app ?? 0, name: p.name ?? '', el: p.el ?? '',
+    icon: p.icon ?? 0, name: p.name ?? '', el: p.el ?? '',
     ew: parseAction(p.ew), eccw: parseAction(p.eccw),
     x: parseAction(p.x), y: parseAction(p.y),
     a: parseAction(p.a), b: parseAction(p.b),
@@ -603,13 +651,21 @@ function parseJson(str) {
 }
 
 function buildJson(profiles) {
-  return JSON.stringify({ v:1, profiles: profiles.map(p => ({
-    app: p.app, name: p.name, el: p.el,
-    ew: actionToJson(p.ew), eccw: actionToJson(p.eccw),
-    x: actionToJson(p.x),   y: actionToJson(p.y),
-    a: actionToJson(p.a),   b: actionToJson(p.b),
-    c: actionToJson(p.c),   d: actionToJson(p.d),
-  }))});
+  const obj = {
+    v: 1,
+    profiles: profiles.map(p => ({
+      icon: p.icon, name: p.name, el: p.el,
+      ew: actionToJson(p.ew), eccw: actionToJson(p.eccw),
+      x: actionToJson(p.x),   y: actionToJson(p.y),
+      a: actionToJson(p.a),   b: actionToJson(p.b),
+      c: actionToJson(p.c),   d: actionToJson(p.d),
+    })),
+  };
+  // Embed uploaded icons as base64
+  const icons = {};
+  for (const [name, words] of Object.entries(iconData)) icons[name] = iconToBase64(words);
+  if (Object.keys(icons).length) obj.icons = icons;
+  return JSON.stringify(obj);
 }
 
 // ── Device I/O ────────────────────────────────────────────────────────────────
@@ -715,11 +771,7 @@ async function loadIconFile(appName, file) {
       ctx.drawImage(img, sx, sy, sz, sz, 0, 0, ICON_SIZE, ICON_SIZE);
       URL.revokeObjectURL(img.src);
 
-      // Hide placeholder "+"
-      const ph = canvas.parentElement.querySelector('.ph');
-      if (ph) ph.style.display = 'none';
-
-      // Convert to RGB565 (byte-swapped for RP2040 DMA)
+      // Convert pixels to RGB565 (byte-swapped for RP2040 DMA)
       const pixels = ctx.getImageData(0, 0, ICON_SIZE, ICON_SIZE).data;
       const words = new Uint16Array(ICON_SIZE * ICON_SIZE);
       for (let i = 0, j = 0; i < pixels.length; i += 4, j++) {
@@ -730,6 +782,8 @@ async function loadIconFile(appName, file) {
         words[j] = ((rgb & 0xFF) << 8) | (rgb >> 8); // byte-swap
       }
       iconData[appName] = words;
+      // Re-render via shared helper so it matches the JSON restore path
+      renderIconWords(appName, words);
       log(`Icon loaded: ${appName} (${ICON_SIZE}×${ICON_SIZE})`, 'log-ok');
       resolve();
     };
@@ -973,18 +1027,18 @@ function renderEditors(profiles) {
     elIn.maxLength = 8; elIn.value = p.el;
     elIn.style.width = '90px';
 
-    const appSel = document.createElement('select');
-    appSel.id = `p${i}_app`;
+    const iconSel = document.createElement('select');
+    iconSel.id = `p${i}_icon`;
     APP_NAMES.forEach((name, ai) => {
       const o = document.createElement('option');
       o.value = ai; o.textContent = name;
-      if (ai === p.app) o.selected = true;
-      appSel.appendChild(o);
+      if (ai === p.icon) o.selected = true;
+      iconSel.appendChild(o);
     });
 
-    meta.appendChild(field('Profile Name', nameIn));
+    meta.appendChild(field('Name', nameIn));
     meta.appendChild(field('ENC2 Label', elIn));
-    meta.appendChild(field('App', appSel));
+    meta.appendChild(field('Icon', iconSel));
     ed.appendChild(meta);
 
     // ENC2 section
@@ -1067,7 +1121,7 @@ function collectProfiles() {
   if (!tabs.length) { log('No profiles loaded', 'log-err'); return null; }
   return Array.from(tabs).map((_, i) => {
     const p = {
-      app:  parseInt(document.getElementById(`p${i}_app`).value),
+      icon: parseInt(document.getElementById(`p${i}_icon`).value),
       name: document.getElementById(`p${i}_name`).value.slice(0, 15),
       el:   document.getElementById(`p${i}_el`).value.slice(0, 8),
     };

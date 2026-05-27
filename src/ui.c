@@ -72,59 +72,40 @@ static void draw_str_centre(uint16_t *fb, int box_x, int box_y,
 // ── App strip (top row) ───────────────────────────────────────────────────────
 
 void ui_draw_strip(uint16_t *fb, int profile_idx) {
-    int cur_app = g_profiles[profile_idx].app_idx;
-    int cell_w  = LCD_W / g_num_apps;   // 48px for 5 apps
+    int cell_w = LCD_W / g_num_profiles;
 
     fill(fb, 0, UI_STRIP_Y, LCD_W, UI_STRIP_H, COL_DGRAY);
 
-    for (int i = 0; i < g_num_apps; i++) {
+    for (int i = 0; i < g_num_profiles; i++) {
         int cx   = i * cell_w;
-        bool sel = (i == cur_app);
+        bool sel = (i == profile_idx);
 
         if (sel) fill(fb, cx, UI_STRIP_Y, cell_w, UI_STRIP_H, RGB565(30, 30, 60));
 
         int icon_sz = 32;
         int ix = cx + (cell_w - icon_sz) / 2;
         int iy = UI_STRIP_Y + (UI_STRIP_H - icon_sz) / 2;
-        icon_draw(fb, ix, iy, icon_sz, g_apps[i].icon_idx, sel);
+        icon_draw(fb, ix, iy, icon_sz, g_profiles[i].icon_idx, sel);
 
-        // Vertical separator between cells
         if (i > 0) vline(fb, cx, UI_STRIP_Y, UI_STRIP_H, COL_GRAY);
     }
 
-    // Bottom border
     hline(fb, 0, UI_STRIP_Y + UI_STRIP_H - 1, LCD_W, COL_GRAY);
 }
 
 // ── Middle row: app name + profile name + indicator dots ─────────────────────
 
 void ui_draw_mid(uint16_t *fb, int profile_idx) {
-    const profile_t *p   = &g_profiles[profile_idx];
-    int              app  = p->app_idx;
+    const profile_t *p = &g_profiles[profile_idx];
 
     fill(fb, 0, UI_MID_Y, LCD_W, UI_MID_H, COL_BLACK);
 
-    // Large app icon on the left (48×48)
-    icon_draw(fb, 4, UI_MID_Y + 16, 48, g_apps[app].icon_idx, false);
-
-    // App name (scale 1)
-    draw_str(fb, 8, UI_MID_Y + UI_MID_H - FONT_H - 4,
-             g_apps[app].name, 1, COL_LGRAY, COL_BLACK);
+    // Large icon on the left (48×48)
+    icon_draw(fb, UI_MID_ICON_X, UI_MID_ICON_Y, UI_MID_ICON_SZ, p->icon_idx, false);
 
     // Profile name (scale 2, white)
-    draw_str(fb, 60, UI_MID_Y + 14, p->name, 2, COL_WHITE, COL_BLACK);
+    draw_str(fb, 60, UI_MID_Y + 24, p->name, 2, COL_WHITE, COL_BLACK);
 
-    // Profile indicator dots: one dot per profile that belongs to same app
-    int dot_x = 60, dot_y = UI_MID_Y + 48;
-    int dot_size = 6, dot_gap = 10;
-    for (int i = 0; i < g_num_profiles; i++) {
-        if (g_profiles[i].app_idx != app) continue;
-        uint16_t col = (i == profile_idx) ? COL_WHITE : COL_GRAY;
-        fill(fb, dot_x, dot_y, dot_size, dot_size, col);
-        dot_x += dot_gap;
-    }
-
-    // Bottom border
     hline(fb, 0, UI_MID_Y + UI_MID_H - 1, LCD_W, COL_GRAY);
 }
 
@@ -187,7 +168,7 @@ void ui_draw_btns(uint16_t *fb, int profile_idx, uint8_t held_mask) {
 // ── Claude mascot animation ───────────────────────────────────────────────────
 
 bool ui_claude_anim_tick(uint16_t *fb, int profile_idx) {
-    if (g_apps[g_profiles[profile_idx].app_idx].icon_idx != ICON_CLAUDE) return false;
+    if (g_profiles[profile_idx].icon_idx != ICON_CLAUDE) return false;
 
     static uint32_t last_ms = 0;
     static int      frame   = 0;
